@@ -15,6 +15,7 @@ interface ResultViewProps {
 export default function ResultView({ result, onReset }: ResultViewProps) {
 	const [isPaid, setIsPaid] = useState(false);
 	const [showPaymentForm, setShowPaymentForm] = useState(false);
+	const isDebugging = true;
 
 	const handleDownloadPDF = () => {
 		generatePDF(result.optimizedCV, result.keywords);
@@ -22,7 +23,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 
 	return (
 		<div className="bg-white rounded-2xl shadow-lg p-8">
-			{!isPaid ? (
+			{!isPaid && !isDebugging ? (
 				<div className="text-center py-8">
 					<div className="text-6xl mb-4">🔒</div>
 					<h2 className="text-2xl font-bold text-slate-800 mb-2">
@@ -57,7 +58,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 
 					<div className="text-3xl font-bold text-slate-800 mb-6">8.99 €</div>
 
-					{!showPaymentForm ? (
+					{!showPaymentForm || isDebugging ? (
 						<button
 							type="button"
 							onClick={() => setShowPaymentForm(true)}
