@@ -6,7 +6,8 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"ignoreUnknown": false
+		"ignoreUnknown": false,
+		"ignore": ["*.css", "**/*.css"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -15,7 +16,10 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"style": {
+				"noNonNullAssertion": "off"
+			}
 		}
 	},
 	"javascript": {
@@ -23,6 +27,23 @@
 			"quoteStyle": "double"
 		}
 	},
+	"css": {
+		"parser": {
+			"cssModules": false,
+			"allowWrongLineComments": true
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["*.css"],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			}
+		}
+	],
 	"assist": {
 		"enabled": true,
 		"actions": {
