@@ -69,7 +69,9 @@ Devuelve un JSON con esta estructura exacta:
 		});
 
 		if (!response.ok) {
-			throw new Error("Error en la API de OpenAI");
+			const errorData = await response.json();
+			console.error("OpenAI API Error:", errorData);
+			throw new Error(`OpenAI API Error: ${JSON.stringify(errorData)}`);
 		}
 
 		const data = await response.json();
@@ -77,9 +79,10 @@ Devuelve un JSON con esta estructura exacta:
 
 		return NextResponse.json(result);
 	} catch (error) {
-		console.error("Error:", error);
+		console.error("Error completo:", error);
+		const errorMsg = error instanceof Error ? error.message : String(error);
 		return NextResponse.json(
-			{ error: "Error al procesar la solicitud" },
+			{ error: "Error al procesar la solicitud", details: errorMsg },
 			{ status: 500 },
 		);
 	}
