@@ -1,48 +1,27 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 
 export async function POST(req: NextRequest) {
 	try {
-		const { cvText, jobOffer } = await req.json();
+		const { cvText, jobOffer, locale = "en" } = await req.json();
 
 		if (!cvText || !jobOffer) {
+			const t = await getTranslations({ locale, namespace: "api.errors" });
 			return NextResponse.json(
-				{ error: "CV y oferta son requeridos" },
+				{ error: t("missingFields") },
 				{ status: 400 },
 			);
 		}
 
-		const prompt = `Eres un experto en optimización de CVs para sistemas ATS (Applicant Tracking Systems).
-
-Tu tarea:
-1. Analiza el CV del candidato
-2. Analiza la oferta de trabajo
-3. Reescribe el CV para maximizar las posibilidades de pasar filtros ATS
-
-Reglas ESTRICTAS:
-- NO inventes experiencia que no existe
-- NO exageres ni uses lenguaje artificial tipo "ChatGPT"
-- Mantén toda la información verídica
-- Usa palabras clave de la oferta cuando sean relevantes
-- Formato profesional europeo
-- Lenguaje claro y directo
-
-CV del candidato:
-${cvText}
-
-Oferta de trabajo:
-${jobOffer}
-
-Devuelve un JSON con esta estructura exacta:
-{
-  "optimizedCV": "CV reescrito completo",
-  "keywords": ["keyword1", "keyword2", "keyword3"]
-}`;
+		const tPrompt = await getTranslations({ locale, namespace: "api.prompt" });
+		const prompt = tPrompt("systemRole", { cvText, jobOffer });
 
 		const openaiKey = process.env.OPENAI_API_KEY;
 		if (!openaiKey) {
+			const tError = await getTranslations({ locale, namespace: "api.errors" });
 			return NextResponse.json(
-				{ error: "API key no configurada" },
+				{ error: tError("apiKeyNotConfigured") },
 				{ status: 500 },
 			);
 		}
@@ -58,8 +37,7 @@ Devuelve un JSON con esta estructura exacta:
 				messages: [
 					{
 						role: "system",
-						content:
-							"Eres un experto en optimización de CVs. Respondes SOLO con JSON válido.",
+						content: tPrompt("systemMessage"),
 					},
 					{ role: "user", content: prompt },
 				],
@@ -81,8 +59,9 @@ Devuelve un JSON con esta estructura exacta:
 	} catch (error) {
 		console.error("Error completo:", error);
 		const errorMsg = error instanceof Error ? error.message : String(error);
+		const tError = await getTranslations({ locale: "en", namespace: "api.errors" });
 		return NextResponse.json(
-			{ error: "Error al procesar la solicitud", details: errorMsg },
+			{ error: tError("processingError"), details: errorMsg },
 			{ status: 500 },
 		);
 	}

@@ -48,5 +48,16 @@
     "payButton": "Pagar 8.99 €",
     "cancelButton": "Cancelar",
     "error": "Error al procesar el pago"
+  },
+  "api": {
+    "errors": {
+      "missingFields": "CV y oferta son requeridos",
+      "apiKeyNotConfigured": "API key no configurada",
+      "processingError": "Error al procesar la solicitud"
+    },
+    "prompt": {
+      "systemRole": "Eres un experto en optimización de CVs para sistemas ATS (Applicant Tracking Systems).\n\nTu tarea:\n1. Analiza el CV del candidato\n2. Analiza la oferta de trabajo\n3. Reescribe el CV para maximizar las posibilidades de pasar filtros ATS\n\nReglas ESTRICTAS:\n- NO inventes experiencia que no existe\n- NO exageres ni uses lenguaje artificial tipo \"ChatGPT\"\n- Mantén toda la información verídica\n- Usa palabras clave de la oferta cuando sean relevantes\n- Formato profesional europeo\n- Lenguaje claro y directo\n\nCV del candidato:\n{cvText}\n\nOferta de trabajo:\n{jobOffer}\n\nDevuelve un JSON con esta estructura exacta:\n{\n  \"optimizedCV\": \"CV reescrito completo\",\n  \"keywords\": [\"keyword1\", \"keyword2\", \"keyword3\"]\n}",
+      "systemMessage": "Eres un experto en optimización de CVs. Respondes SOLO con JSON válido."
+    }
   }
 }

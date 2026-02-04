@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import CVForm from "./cv-form";
 import ResultView from "./result-view";
 
 export default function HomePage() {
 	const t = useTranslations("home");
+	const locale = useLocale();
 	const [result, setResult] = useState<{
 		optimizedCV: string;
 		keywords: string[];
@@ -17,7 +18,7 @@ export default function HomePage() {
 			const response = await fetch("/api/optimize", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ cvText, jobOffer }),
+				body: JSON.stringify({ cvText, jobOffer, locale }),
 			});
 			const data = await response.json();
 			setResult(data);
