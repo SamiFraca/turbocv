@@ -13,12 +13,12 @@ export default function HomePage() {
 		keywords: string[];
 	} | null>(null);
 
-	const handleOptimize = async (cvText: string, jobOffer: string) => {
+	const handleOptimize = async (cvBase64: string, jobOffer: string) => {
 		try {
 			const response = await fetch("/api/optimize", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ cvText, jobOffer, locale }),
+				body: JSON.stringify({ cvBase64, jobOffer, locale }),
 			});
 			const data = await response.json();
 			setResult(data);

@@ -4,9 +4,9 @@ import { getTranslations } from "next-intl/server";
 
 export async function POST(req: NextRequest) {
 	try {
-		const { cvText, jobOffer, locale = "en" } = await req.json();
+		const { cvBase64, jobOffer, locale = "en" } = await req.json();
 
-		if (!cvText || !jobOffer) {
+		if (!cvBase64 || !jobOffer) {
 			const t = await getTranslations({ locale, namespace: "api.errors" });
 			return NextResponse.json(
 				{ error: t("missingFields") },
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		const tPrompt = await getTranslations({ locale, namespace: "api.prompt" });
-		const prompt = tPrompt("systemRole", { cvText, jobOffer });
+		const prompt = tPrompt("systemRole", { cvText: `data:application/pdf;base64,${cvBase64}`, jobOffer });
 
 		const openaiKey = process.env.OPENAI_API_KEY;
 		if (!openaiKey) {
