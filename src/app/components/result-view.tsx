@@ -9,6 +9,7 @@ interface ResultViewProps {
 	result: {
 		optimizedCV: string;
 		keywords: string[];
+		pdfBase64?: string;
 	};
 	onReset: () => void;
 }
@@ -20,7 +21,16 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 	const isDebugging = true;
 
 	const handleDownloadPDF = () => {
-		generatePDF(result.optimizedCV, result.keywords);
+		if (result.pdfBase64) {
+			const link = document.createElement("a");
+			link.href = `data:application/pdf;base64,${result.pdfBase64}`;
+			link.download = "optimized-cv.pdf";
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		} else {
+			generatePDF(result.optimizedCV, result.keywords);
+		}
 	};
 
 	return (

@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { PDFDocument, PDFPage, rgb } from "pdf-lib";
 
 export async function POST(req: NextRequest) {
 	try {
@@ -55,7 +56,39 @@ export async function POST(req: NextRequest) {
 		const data = await response.json();
 		const result = JSON.parse(data.choices[0].message.content);
 
-		return NextResponse.json(result);
+		try {
+			const pdfBytes = Buffer.from(cvBase64, "base64");
+			const pdfDoc = await PDFDocument.load(pdfBytes);
+			const pages = pdfDoc.getPages();
+
+			const pageHeight = pages[0].getHeight();
+			const pageWidth = pages[0].getWidth();
+			const margin = 20;
+			const fontSize = 10;
+			const lineHeight = 12;
+
+			pages.forEach((page) => {
+				page.drawText(result.optimizedCV, {
+					x: margin,
+					y: pageHeight - margin,
+					size: fontSize,
+					color: rgb(0, 0, 0),
+					maxWidth: pageWidth - 2 * margin,
+					lineHeight: lineHeight,
+				});
+			});
+
+			const modifiedPdfBytes = await pdfDoc.save();
+			const pdfBase64 = Buffer.from(modifiedPdfBytes).toString("base64");
+
+			return NextResponse.json({
+				...result,
+				pdfBase64,
+			});
+		} catch (pdfError) {
+			console.warn("PDF modification failed, returning text only:", pdfError);
+			return NextResponse.json(result);
+		}
 	} catch (error) {
 		console.error("Error completo:", error);
 		const errorMsg = error instanceof Error ? error.message : String(error);
