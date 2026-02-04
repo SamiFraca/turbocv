@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import CVForm from "./cv-form";
 import ResultView from "./result-view";
-import LanguageSwitcher from "./language-switcher";
 
 export default function HomePage() {
-	const t = useTranslations();
 	const [result, setResult] = useState<{
 		optimizedCV: string;
 		keywords: string[];
@@ -35,15 +32,12 @@ export default function HomePage() {
 		<div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
 			<div className="bg-slate-900 text-white py-16 px-4">
 				<div className="max-w-4xl mx-auto">
-					<div className="flex justify-end mb-8">
-						<LanguageSwitcher />
-					</div>
 					<div className="text-center">
 						<h1 className="text-4xl md:text-5xl font-bold mb-4">
-							{t("home.title")}
+							TurboCV - Ajusta tu CV a cada oferta en 60 segundos
 						</h1>
 						<p className="text-xl text-slate-300 max-w-2xl mx-auto">
-							{t("home.subtitle")}
+							Optimiza tu currículum para pasar filtros ATS. Analiza tu CV y la oferta de trabajo para obtener un CV ajustado que maximice tus opciones.
 						</p>
 					</div>
 				</div>

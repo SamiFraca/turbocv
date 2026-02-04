@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useState, useRef } from "react";
 import * as pdfjsLib from "pdfjs-dist";
 
 if (typeof window !== "undefined") {
@@ -13,7 +12,6 @@ interface CVFormProps {
 }
 
 export default function CVForm({ onOptimize }: CVFormProps) {
-	const t = useTranslations();
 	const [cvText, setCvText] = useState("");
 	const [jobOffer, setJobOffer] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +41,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 
 	const processPDFFile = async (file: File) => {
 		if (file.type !== "application/pdf") {
-			alert(t("cvForm.pdfAlert"));
+			alert("Please upload a PDF file");
 			return;
 		}
 
@@ -54,7 +52,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 		} catch (error) {
 			console.error("Error extrayendo PDF:", error);
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			alert(t("cvForm.pdfError", { error: errorMsg }));
+			alert(`Error extracting PDF: ${errorMsg}`);
 		} finally {
 			setIsExtracting(false);
 			if (fileInputRef.current) {
@@ -105,7 +103,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 							htmlFor="cv"
 							className="block text-sm font-semibold text-slate-700"
 						>
-							{t("cvForm.cvLabel")}
+							CV
 						</label>
 						<button
 							type="button"
@@ -113,7 +111,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 							disabled={isExtracting}
 							className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:text-slate-400"
 						>
-							{isExtracting ? t("cvForm.extracting") : t("cvForm.uploadPDF")}
+							{isExtracting ? "Extracting..." : "Upload PDF"}
 						</button>
 						<input
 							ref={fileInputRef}
@@ -131,7 +129,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 								? "border-blue-500 border-2 bg-blue-50"
 								: "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
 						}`}
-						placeholder={t("cvForm.cvPlaceholder")}
+						placeholder="Paste your CV here or upload a PDF file"
 						value={cvText}
 						onChange={(e) => setCvText(e.target.value)}
 						disabled={isExtracting}
@@ -146,13 +144,13 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 						htmlFor="offer"
 						className="block text-sm font-semibold text-slate-700 mb-2"
 					>
-						{t("cvForm.jobLabel")}
+						Job Offer
 					</label>
 					<textarea
 						id="offer"
 						rows={6}
 						className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
-						placeholder={t("cvForm.jobPlaceholder")}
+						placeholder="Paste the job offer here"
 						value={jobOffer}
 						onChange={(e) => setJobOffer(e.target.value)}
 					/>
@@ -164,7 +162,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 					disabled={!cvText.trim() || !jobOffer.trim() || isLoading}
 					className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-lg"
 				>
-					{isLoading ? t("cvForm.analyzing") : t("cvForm.optimizeButton")}
+					{isLoading ? "Analyzing..." : "Optimize CV"}
 				</button>
 			</div>
 
@@ -172,23 +170,23 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 				<div className="grid md:grid-cols-3 gap-6 text-center">
 					<div>
 						<div className="text-2xl mb-2">🎯</div>
-						<h3 className="font-semibold text-slate-800">{t("cvForm.features.atsOptimized")}</h3>
+						<h3 className="font-semibold text-slate-800">ATS Optimized</h3>
 						<p className="text-sm text-slate-600 mt-1">
-							{t("cvForm.features.atsOptimizedDesc")}
+							Your CV will be optimized to pass ATS filters
 						</p>
 					</div>
 					<div>
 						<div className="text-2xl mb-2">⚡</div>
-						<h3 className="font-semibold text-slate-800">{t("cvForm.features.immediateResult")}</h3>
+						<h3 className="font-semibold text-slate-800">Immediate Result</h3>
 						<p className="text-sm text-slate-600 mt-1">
-							{t("cvForm.features.immediateResultDesc")}
+							Get your optimized CV in seconds
 						</p>
 					</div>
 					<div>
 						<div className="text-2xl mb-2">✅</div>
-						<h3 className="font-semibold text-slate-800">{t("cvForm.features.noLies")}</h3>
+						<h3 className="font-semibold text-slate-800">No Lies</h3>
 						<p className="text-sm text-slate-600 mt-1">
-							{t("cvForm.features.noLiesDesc")}
+							We only enhance what's already there
 						</p>
 					</div>
 				</div>

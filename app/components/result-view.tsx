@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import PaymentModal from "./payment-modal";
 import { generatePDF } from "../lib/pdf";
 
@@ -14,7 +13,6 @@ interface ResultViewProps {
 }
 
 export default function ResultView({ result, onReset }: ResultViewProps) {
-	const t = useTranslations();
 	const [isPaid, setIsPaid] = useState(false);
 	const [showPaymentForm, setShowPaymentForm] = useState(false);
 	const isDebugging = true;
@@ -29,33 +27,33 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 				<div className="text-center py-8">
 					<div className="text-6xl mb-4">🔒</div>
 					<h2 className="text-2xl font-bold text-slate-800 mb-2">
-						{t("result.locked.title")}
+						Unlock Your Optimized CV
 					</h2>
 					<p className="text-slate-600 mb-6">
-						{t("result.locked.description")}
+						Pay to download your optimized CV with all improvements
 					</p>
 
 					<div className="bg-slate-50 rounded-lg p-6 mb-6 text-left">
 						<h3 className="font-semibold text-slate-800 mb-3">
-							{t("result.locked.featuresTitle")}
+							What you get:
 						</h3>
 						<ul className="space-y-2 text-slate-600">
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> {t("result.locked.rewritten")}
+								<span className="text-green-500">✓</span> Completely rewritten content
 							</li>
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> {t("result.locked.keywords")}
+								<span className="text-green-500">✓</span> Keywords extracted from job offer
 							</li>
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> {t("result.locked.format")}
+								<span className="text-green-500">✓</span> Professional formatting
 							</li>
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> {t("result.locked.download")}
+								<span className="text-green-500">✓</span> Download as PDF
 							</li>
 						</ul>
 					</div>
 
-					<div className="text-3xl font-bold text-slate-800 mb-6">{t("result.locked.price")}</div>
+					<div className="text-3xl font-bold text-slate-800 mb-6">$8.99</div>
 
 					{!showPaymentForm || isDebugging ? (
 						<button
@@ -63,7 +61,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 							onClick={() => setShowPaymentForm(true)}
 							className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-lg"
 						>
-							{t("result.locked.payButton")}
+							Pay Now
 						</button>
 					) : (
 						<PaymentModal
@@ -77,28 +75,28 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						onClick={onReset}
 						className="mt-4 text-slate-500 hover:text-slate-700 text-sm"
 					>
-						{t("result.locked.backButton")}
+						Start Over
 					</button>
 				</div>
 			) : (
 				<div>
 					<div className="flex justify-between items-center mb-6">
 						<h2 className="text-2xl font-bold text-slate-800">
-							{t("result.unlocked.title")}
+							Your Optimized CV
 						</h2>
 						<button
 							type="button"
 							onClick={onReset}
 							className="text-blue-600 hover:text-blue-700 text-sm"
 						>
-							{t("result.unlocked.newCV")}
+							Start New CV
 						</button>
 					</div>
 
 					{result.keywords && result.keywords.length > 0 && (
 						<div className="mb-6">
 							<h3 className="font-semibold text-slate-700 mb-2">
-								{t("result.unlocked.keywordsLabel")}
+								Key Skills Matched:
 							</h3>
 							<div className="flex flex-wrap gap-2">
 								{result.keywords.map((kw) => (
@@ -124,7 +122,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						onClick={handleDownloadPDF}
 						className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-lg"
 					>
-						{t("result.unlocked.downloadButton")}
+						Download PDF
 					</button>
 				</div>
 			)}
