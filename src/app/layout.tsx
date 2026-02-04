@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
+import { getTranslations } from "next-intl/server";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -13,11 +14,14 @@ const geistMono = Geist_Mono({
 	subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-	title: "TurboCV - Ajusta tu CV a cada oferta en 60 segundos",
-	description:
-		"Optimiza tu currículum para pasar filtros ATS. Analiza tu CV y la oferta de trabajo para obtener un CV ajustado que maximice tus opciones.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+	const t = await getTranslations("home");
+	
+	return {
+		title: t("title"),
+		description: t("subtitle"),
+	};
+}
 
 export default function RootLayout({
 	children,
