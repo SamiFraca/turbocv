@@ -1,0 +1,52 @@
+{
+  "home": {
+    "title": "Ajusta tu CV a cada oferta en 60 segundos",
+    "subtitle": "Diseñado para pasar filtros ATS, no para sonar bonito"
+  },
+  "cvForm": {
+    "cvLabel": "Tu CV (copia y pega el texto o sube PDF)",
+    "uploadPDF": "📄 Subir PDF",
+    "extracting": "Extrayendo...",
+    "cvPlaceholder": "Pega aquí tu currículum o arrastra un PDF...",
+    "jobLabel": "Oferta de trabajo",
+    "jobPlaceholder": "Pega aquí la descripción de la oferta...",
+    "optimizeButton": "Optimizar mi CV",
+    "analyzing": "Analizando...",
+    "pdfAlert": "Por favor, sube un archivo PDF",
+    "pdfError": "Error al leer el PDF: {error}\n\nIntenta copiar y pegar el texto.",
+    "features": {
+      "atsOptimized": "Optimizado para ATS",
+      "atsOptimizedDesc": "Pasa los filtros automáticos",
+      "immediateResult": "Resultado inmediato",
+      "immediateResultDesc": "En menos de 60 segundos",
+      "noLies": "Sin mentiras",
+      "noLiesDesc": "Reescribe sin inventar experiencia"
+    }
+  },
+  "result": {
+    "locked": {
+      "title": "Tu CV está listo",
+      "description": "Desbloquea tu CV optimizado y descárgalo en PDF",
+      "featuresTitle": "Lo que incluye:",
+      "rewritten": "CV reescrito y optimizado",
+      "keywords": "Palabras clave añadidas para ATS",
+      "format": "Formato profesional europeo",
+      "download": "Descarga en PDF",
+      "price": "8.99 €",
+      "payButton": "Pagar y desbloquear",
+      "backButton": "← Volver atrás"
+    },
+    "unlocked": {
+      "title": "Tu CV Optimizado",
+      "keywordsLabel": "Palabras clave añadidas:",
+      "downloadButton": "📄 Descargar PDF",
+      "newCV": "Nuevo CV →"
+    }
+  },
+  "payment": {
+    "processing": "Procesando...",
+    "payButton": "Pagar 8.99 €",
+    "cancelButton": "Cancelar",
+    "error": "Error al procesar el pago"
+  }
+}

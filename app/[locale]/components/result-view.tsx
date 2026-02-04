@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import PaymentModal from "./payment-modal";
 import { generatePDF } from "../lib/pdf";
 
@@ -13,6 +14,7 @@ interface ResultViewProps {
 }
 
 export default function ResultView({ result, onReset }: ResultViewProps) {
+	const t = useTranslations();
 	const [isPaid, setIsPaid] = useState(false);
 	const [showPaymentForm, setShowPaymentForm] = useState(false);
 	const isDebugging = true;
@@ -27,36 +29,33 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 				<div className="text-center py-8">
 					<div className="text-6xl mb-4">🔒</div>
 					<h2 className="text-2xl font-bold text-slate-800 mb-2">
-						Tu CV está listo
+						{t("result.locked.title")}
 					</h2>
 					<p className="text-slate-600 mb-6">
-						Desbloquea tu CV optimizado y descárgalo en PDF
+						{t("result.locked.description")}
 					</p>
 
 					<div className="bg-slate-50 rounded-lg p-6 mb-6 text-left">
 						<h3 className="font-semibold text-slate-800 mb-3">
-							Lo que incluye:
+							{t("result.locked.featuresTitle")}
 						</h3>
 						<ul className="space-y-2 text-slate-600">
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> CV reescrito y
-								optimizado
+								<span className="text-green-500">✓</span> {t("result.locked.rewritten")}
 							</li>
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> Palabras clave
-								añadidas para ATS
+								<span className="text-green-500">✓</span> {t("result.locked.keywords")}
 							</li>
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> Formato profesional
-								europeo
+								<span className="text-green-500">✓</span> {t("result.locked.format")}
 							</li>
 							<li className="flex items-center gap-2">
-								<span className="text-green-500">✓</span> Descarga en PDF
+								<span className="text-green-500">✓</span> {t("result.locked.download")}
 							</li>
 						</ul>
 					</div>
 
-					<div className="text-3xl font-bold text-slate-800 mb-6">8.99 €</div>
+					<div className="text-3xl font-bold text-slate-800 mb-6">{t("result.locked.price")}</div>
 
 					{!showPaymentForm || isDebugging ? (
 						<button
@@ -64,7 +63,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 							onClick={() => setShowPaymentForm(true)}
 							className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors text-lg"
 						>
-							Pagar y desbloquear
+							{t("result.locked.payButton")}
 						</button>
 					) : (
 						<PaymentModal
@@ -78,28 +77,28 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						onClick={onReset}
 						className="mt-4 text-slate-500 hover:text-slate-700 text-sm"
 					>
-						← Volver atrás
+						{t("result.locked.backButton")}
 					</button>
 				</div>
 			) : (
 				<div>
 					<div className="flex justify-between items-center mb-6">
 						<h2 className="text-2xl font-bold text-slate-800">
-							Tu CV Optimizado
+							{t("result.unlocked.title")}
 						</h2>
 						<button
 							type="button"
 							onClick={onReset}
 							className="text-blue-600 hover:text-blue-700 text-sm"
 						>
-							Nuevo CV →
+							{t("result.unlocked.newCV")}
 						</button>
 					</div>
 
 					{result.keywords && result.keywords.length > 0 && (
 						<div className="mb-6">
 							<h3 className="font-semibold text-slate-700 mb-2">
-								Palabras clave añadidas:
+								{t("result.unlocked.keywordsLabel")}
 							</h3>
 							<div className="flex flex-wrap gap-2">
 								{result.keywords.map((kw) => (
@@ -125,7 +124,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						onClick={handleDownloadPDF}
 						className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors text-lg"
 					>
-						📄 Descargar PDF
+						{t("result.unlocked.downloadButton")}
 					</button>
 				</div>
 			)}

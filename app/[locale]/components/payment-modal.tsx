@@ -8,6 +8,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const stripePromise = loadStripe(
 	process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!,
@@ -19,6 +20,7 @@ interface PaymentFormProps {
 }
 
 function CheckoutForm({ onSuccess, onCancel }: PaymentFormProps) {
+	const t = useTranslations();
 	const stripe = useStripe();
 	const elements = useElements();
 	const [isProcessing, setIsProcessing] = useState(false);
@@ -41,7 +43,7 @@ function CheckoutForm({ onSuccess, onCancel }: PaymentFormProps) {
 		});
 
 		if (error) {
-			setErrorMessage(error.message || "Error al procesar el pago");
+			setErrorMessage(error.message || t("payment.error"));
 			setIsProcessing(false);
 		} else {
 			onSuccess();
@@ -62,14 +64,14 @@ function CheckoutForm({ onSuccess, onCancel }: PaymentFormProps) {
 					disabled={!stripe || isProcessing}
 					className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-semibold rounded-lg transition-colors"
 				>
-					{isProcessing ? "Procesando..." : "Pagar 8.99 €"}
+					{isProcessing ? t("payment.processing") : t("payment.payButton")}
 				</button>
 				<button
 					type="button"
 					onClick={onCancel}
 					className="px-6 py-3 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg transition-colors"
 				>
-					Cancelar
+					{t("payment.cancelButton")}
 				</button>
 			</div>
 		</form>

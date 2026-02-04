@@ -1,22 +1,19 @@
 import { getRequestConfig } from 'next-intl/server';
-import { headers } from 'next/headers';
 
-export default getRequestConfig(async () => {
-  // Get the locale from the URL pathname or browser language
-  const headersList = await headers();
-  const acceptLanguage = headersList.get('accept-language') || 'en';
+export default getRequestConfig(async ({ locale }) => {
+  const resolvedLocale = locale || 'en';
   
-  // Extract the preferred language from Accept-Language header
-  const preferredLocale = acceptLanguage
-    .split(',')[0]
-    .split('-')[0]
-    .toLowerCase();
-
-  // Default to 'en' if the preferred language is not supported
-  const locale = ['en', 'es'].includes(preferredLocale) ? preferredLocale : 'en';
-
-  return {
-    locale,
-    messages: (await import(`../messages/${locale}.json`)).default
-  };
+  try {
+    const messages = await import(`./messages/${resolvedLocale}.json`);
+    return {
+      locale: resolvedLocale,
+      messages: messages.default
+    };
+  } catch {
+    const messages = await import(`./messages/en.json`);
+    return {
+      locale: 'en',
+      messages: messages.default
+    };
+  }
 });

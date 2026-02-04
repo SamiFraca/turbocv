@@ -1,0 +1,52 @@
+{
+  "home": {
+    "title": "Tailor your CV to each offer in 60 seconds",
+    "subtitle": "Designed to pass ATS filters, not to sound pretty"
+  },
+  "cvForm": {
+    "cvLabel": "Your CV (copy and paste text or upload PDF)",
+    "uploadPDF": "📄 Upload PDF",
+    "extracting": "Extracting...",
+    "cvPlaceholder": "Paste your resume here or drag a PDF...",
+    "jobLabel": "Job Offer",
+    "jobPlaceholder": "Paste the job description here...",
+    "optimizeButton": "Optimize My CV",
+    "analyzing": "Analyzing...",
+    "pdfAlert": "Please upload a PDF file",
+    "pdfError": "Error reading PDF: {error}\n\nTry copying and pasting the text.",
+    "features": {
+      "atsOptimized": "ATS Optimized",
+      "atsOptimizedDesc": "Pass automatic filters",
+      "immediateResult": "Immediate Result",
+      "immediateResultDesc": "In less than 60 seconds",
+      "noLies": "No Lies",
+      "noLiesDesc": "Rewrites without inventing experience"
+    }
+  },
+  "result": {
+    "locked": {
+      "title": "Your CV is ready",
+      "description": "Unlock your optimized CV and download it as PDF",
+      "featuresTitle": "What's included:",
+      "rewritten": "Rewritten and optimized CV",
+      "keywords": "ATS keywords added",
+      "format": "Professional European format",
+      "download": "PDF download",
+      "price": "8.99 €",
+      "payButton": "Pay and unlock",
+      "backButton": "← Go back"
+    },
+    "unlocked": {
+      "title": "Your Optimized CV",
+      "keywordsLabel": "Keywords added:",
+      "downloadButton": "📄 Download PDF",
+      "newCV": "New CV →"
+    }
+  },
+  "payment": {
+    "processing": "Processing...",
+    "payButton": "Pay 8.99 €",
+    "cancelButton": "Cancel",
+    "error": "Error processing payment"
+  }
+}
