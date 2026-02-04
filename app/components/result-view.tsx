@@ -96,7 +96,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						</button>
 					</div>
 
-					{result.keywords.length > 0 && (
+					{result.keywords && result.keywords.length > 0 && (
 						<div className="mb-6">
 							<h3 className="font-semibold text-slate-700 mb-2">
 								Palabras clave añadidas:
