@@ -81,11 +81,11 @@ export async function POST(req: NextRequest) {
 		console.log("File uploaded successfully:", uploadResult.id);
 		
 		console.log("=== Calling OpenAI Responses API ===");
-		console.log("Model: gpt-5");
+		console.log("Model: gpt-4o-mini");
 		console.log("File ID:", uploadResult.id);
 		
 		const requestBody = {
-			model: "gpt-5",
+			model: "gpt-4o-mini",
 			input: [
             {
                 "role": "user",
@@ -101,11 +101,6 @@ export async function POST(req: NextRequest) {
                 ]
             }
 			],
-			text: {
-				format: {
-					type: "json_object"
-				}
-			}
 		};
 		
 		console.log("Request body size:", JSON.stringify(requestBody).length);
@@ -135,17 +130,49 @@ export async function POST(req: NextRequest) {
 
 		console.log("=== Parsing OpenAI Response ===");
 		const data = await response.json();
-		console.log("OpenAI response structure:", {
-			hasOutput: !!data.output,
-			outputLength: data.output?.length,
-			firstOutput: data.output?.[0] ? {
-				hasContent: !!data.output[0]?.content?.[0],
-				contentType: data.output[0]?.content?.[0]?.type,
-				contentLength: data.output[0]?.content?.[0]?.text?.length
-			} : null
-		});
+		console.log("Full OpenAI response:", JSON.stringify(data, null, 2));
 		
-		// Clean up uploaded file
+		// Debug: log all output items
+		if (data.output) {
+			data.output.forEach((item: any, idx: number) => {
+				console.log(`Output[${idx}]:`, JSON.stringify(item, null, 2));
+			});
+		}
+		
+		// The Responses API returns content in output[].content[].text
+		// Find the first output with actual text content
+		let content: string | null = null;
+		for (const output of data.output || []) {
+			for (const contentItem of output.content || []) {
+				if (contentItem.text) {
+					content = contentItem.text;
+					break;
+				}
+			}
+			if (content) break;
+		}
+		
+		if (!content) {
+			console.error("Invalid OpenAI response structure - no content found");
+			console.error("Output structure:", JSON.stringify(data.output, null, 2));
+			throw new Error("Invalid response from OpenAI API");
+		}
+		
+		console.log("Raw content from OpenAI:", content.substring(0, 200) + "...");
+		
+		// Extract JSON from markdown code blocks if present
+		let jsonString = content;
+		const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+		if (jsonMatch) {
+			jsonString = jsonMatch[1];
+			console.log("Extracted JSON from markdown code block");
+		}
+		
+		const result = JSON.parse(jsonString);
+		console.log("Parsed result keys:", Object.keys(result));
+		console.log("Optimized CV length:", result.optimizedCV?.length);
+		console.log("Keywords count:", result.keywords?.length);
+
 		console.log("=== Cleaning up uploaded file ===");
 		try {
 			await fetch(`https://api.openai.com/v1/files/${uploadResult.id}`, {
@@ -158,15 +185,6 @@ export async function POST(req: NextRequest) {
 		} catch (cleanupError) {
 			console.warn("Failed to delete file:", cleanupError);
 		}
-		
-		if (!data.output?.[0]?.content?.[0]?.text) {
-			console.error("Invalid OpenAI response structure");
-			throw new Error("Invalid response from OpenAI API");
-		}
-		
-		console.log("Raw content from OpenAI:", data.output[0].content[0].text.substring(0, 200) + "...");
-		
-		const result = JSON.parse(data.output[0].content[0].text);
 		console.log("Parsed result keys:", Object.keys(result));
 		console.log("Optimized CV length:", result.optimizedCV?.length);
 		console.log("Keywords count:", result.keywords?.length);
@@ -179,10 +197,9 @@ export async function POST(req: NextRequest) {
 		console.error("Error message:", error instanceof Error ? error.message : String(error));
 		console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
 		const errorMsg = error instanceof Error ? error.message : String(error);
-		const tError = await getTranslations({ locale: "en", namespace: "api.errors" });
 		return NextResponse.json(
 			{ 
-				error: tError("genericError"), 
+				error: "An error occurred while processing your request", 
 				details: errorMsg,
 				debug: {
 					errorType: error instanceof Error ? error.constructor.name : 'Unknown',
