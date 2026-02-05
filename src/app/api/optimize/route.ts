@@ -1,6 +1,96 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
+import { PDFDocument, rgb } from "pdf-lib";
+
+async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: string): Promise<string> {
+	try {
+		// Load the original PDF
+		const pdfDoc = await PDFDocument.load(pdfBuffer);
+		const pages = pdfDoc.getPages();
+		
+		if (pages.length === 0) {
+			throw new Error("PDF has no pages");
+		}
+		
+		// Get dimensions from the first page
+		const firstPage = pages[0];
+		const { width, height } = firstPage.getSize();
+		
+		// Strategy: Create a semi-transparent white rectangle to cover text areas,
+		// then write optimized text on top. This preserves images and styling underneath.
+		const fontSize = 9;
+		const margin = 15;
+		const maxWidth = width - 2 * margin;
+		const lineHeight = 11;
+		
+		let yPosition = height - margin;
+		const lines = optimizedText.split('\n');
+		let pageIndex = 0;
+		
+		for (const line of lines) {
+			const wrappedLines = wrapText(line, maxWidth, fontSize);
+			
+			for (const wrappedLine of wrappedLines) {
+				if (yPosition < margin) {
+					pageIndex++;
+					if (pageIndex >= pages.length) {
+						pdfDoc.addPage([width, height]);
+					}
+					yPosition = height - margin;
+				}
+				
+				const currentPage = pages[pageIndex] || pdfDoc.getPage(pageIndex);
+				
+				// Draw a white rectangle to cover the area (preserves images below)
+				currentPage.drawRectangle({
+					x: margin - 2,
+					y: yPosition - 8,
+					width: maxWidth + 4,
+					height: lineHeight,
+					color: rgb(255, 255, 255),
+					opacity: 0.95,
+				});
+				
+				// Draw the optimized text on top
+				currentPage.drawText(wrappedLine, {
+					x: margin,
+					y: yPosition,
+					size: fontSize,
+					color: rgb(0, 0, 0),
+				});
+				
+				yPosition -= lineHeight;
+			}
+		}
+		
+		// Save and return as base64
+		const pdfBytes = await pdfDoc.save();
+		return Buffer.from(pdfBytes).toString('base64');
+	} catch (error) {
+		console.error("Error modifying PDF:", error);
+		return "";
+	}
+}
+
+function wrapText(text: string, maxWidth: number, fontSize: number): string[] {
+	// Rough estimation: each character is about 0.5 * fontSize in width
+	const charsPerLine = Math.floor(maxWidth / (fontSize * 0.5));
+	const lines: string[] = [];
+	
+	let currentLine = "";
+	for (const word of text.split(" ")) {
+		if ((currentLine + word).length > charsPerLine) {
+			if (currentLine) lines.push(currentLine);
+			currentLine = word;
+		} else {
+			currentLine += (currentLine ? " " : "") + word;
+		}
+	}
+	if (currentLine) lines.push(currentLine);
+	
+	return lines;
+}
 
 export async function POST(req: NextRequest) {
 	try {
@@ -189,8 +279,16 @@ export async function POST(req: NextRequest) {
 		console.log("Optimized CV length:", result.optimizedCV?.length);
 		console.log("Keywords count:", result.keywords?.length);
 
+		console.log("=== Modifying original PDF with optimized CV ===");
+		const pdfBuffer = await pdfFile.arrayBuffer();
+		const pdfBase64 = await modifyPDFWithOptimizedText(Buffer.from(pdfBuffer), result.optimizedCV);
+		console.log("PDF modified, base64 length:", pdfBase64.length);
+
 		console.log("=== API Request Completed Successfully ===");
-		return NextResponse.json(result);
+		return NextResponse.json({
+			...result,
+			pdfBase64
+		});
 	} catch (error: unknown) {
 		console.error("=== API Request Failed ===");
 		console.error("Error type:", error instanceof Error ? error.constructor.name : 'Unknown');
