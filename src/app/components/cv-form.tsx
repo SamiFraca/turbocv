@@ -4,51 +4,31 @@ import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 interface CVFormProps {
-	onOptimize: (cvBase64: string, jobOffer: string) => Promise<void>;
+	onOptimize: (pdfFile: File, jobOffer: string) => Promise<void>;
 }
 
 export default function CVForm({ onOptimize }: CVFormProps) {
 	const t = useTranslations("cvForm");
-	const [cvBase64, setCvBase64] = useState("");
+	const [pdfFile, setPdfFile] = useState<File | null>(null);
 	const [cvFileName, setCvFileName] = useState("");
 	const [jobOffer, setJobOffer] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
-	const [isExtracting, setIsExtracting] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const convertPDFToBase64 = async (file: File): Promise<string> => {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				const base64String = (reader.result as string).split(",")[1];
-				resolve(base64String);
-			};
-			reader.onerror = reject;
-			reader.readAsDataURL(file);
-		});
-	};
-
+	
 	const processPDFFile = async (file: File) => {
 		if (file.type !== "application/pdf") {
 			alert(t("pdfAlert"));
 			return;
 		}
 
-		setIsExtracting(true);
 		try {
-			const base64 = await convertPDFToBase64(file);
-			setCvBase64(base64);
+			setPdfFile(file);
 			setCvFileName(file.name);
 		} catch (error) {
 			console.error("Error processing PDF:", error);
-			const errorMsg = error instanceof Error ? error.message : String(error);
-			alert(t("pdfError", { error: errorMsg }));
-		} finally {
-			setIsExtracting(false);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = "";
-			}
+			alert(t("pdfError"));
 		}
 	};
 
@@ -78,10 +58,10 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 	};
 
 	const handleSubmit = async () => {
-		if (!cvBase64 || !jobOffer.trim()) return;
+		if (!pdfFile || !jobOffer.trim()) return;
 
 		setIsLoading(true);
-		await onOptimize(cvBase64, jobOffer);
+		await onOptimize(pdfFile, jobOffer);
 		setIsLoading(false);
 	};
 
@@ -108,13 +88,13 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 								<div className="text-3xl mb-2">📄</div>
 								<p className="font-semibold text-slate-800">{cvFileName}</p>
 								<p className="text-sm text-slate-500 mt-2">
-									{isExtracting ? t("extracting") : t("uploadPDF")}
+									{t("uploadPDF")}
 								</p>
 								<button
 									type="button"
 									onClick={(e) => {
 										e.stopPropagation();
-										setCvBase64("");
+										setPdfFile(null);
 										setCvFileName("");
 									}}
 									className="mt-3 text-sm text-red-600 hover:text-red-700 font-medium"
@@ -163,7 +143,7 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 				<button
 					type="button"
 					onClick={handleSubmit}
-					disabled={!cvBase64.trim() || !jobOffer.trim() || isLoading}
+					disabled={!pdfFile || !jobOffer.trim() || isLoading}
 					className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-lg"
 				>
 					{isLoading ? t("analyzing") : t("optimizeButton")}

@@ -13,12 +13,16 @@ export default function HomePage() {
 		keywords: string[];
 	} | null>(null);
 
-	const handleOptimize = async (cvBase64: string, jobOffer: string) => {
+	const handleOptimize = async (pdfFile: File, jobOffer: string) => {
 		try {
+			const formData = new FormData();
+			formData.append("pdf", pdfFile);
+			formData.append("jobOffer", jobOffer);
+			formData.append("locale", locale);
+			
 			const response = await fetch("/api/optimize", {
 				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ cvBase64, jobOffer, locale }),
+				body: formData,
 			});
 			const data = await response.json();
 			setResult(data);
