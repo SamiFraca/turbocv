@@ -1,5 +1,6 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import type { TemplateProps } from '../cv-types';
 
 const styles = StyleSheet.create({
 	page: {
@@ -88,107 +89,44 @@ const styles = StyleSheet.create({
 	},
 });
 
-interface CVData {
-	optimizedCV: string;
-	keywords: string[];
-}
-
-interface ParsedCV {
-	header?: { name: string; title: string; contact: string };
-	profile?: string;
-	employment?: Array<{ title: string; company: string; dates: string; description: string }>;
-	education?: Array<{ degree: string; school: string; dates?: string }>;
-	certifications?: string[];
-}
-
-function parseCV(text: string): ParsedCV {
-	const result: ParsedCV = {};
-	const lines = text.split('\n').filter(l => l.trim());
-
-	if (lines.length > 0) {
-		result.header = {
-			name: lines[0] || 'CV',
-			title: lines[1] || '',
-			contact: lines.slice(2, 5).join(' • ') || '',
-		};
-	}
-
-	const profileMatch = text.match(/(?:Profile|Summary|Professional Summary)([\s\S]*?)(?=\n\n(?:Employment|Education|Certification|Skills|$))/i);
-	if (profileMatch) result.profile = profileMatch[1].trim();
-
-	const employmentMatch = text.match(/(?:Employment|Professional Experience|Work Experience)([\s\S]*?)(?=\n\n(?:Education|Certification|Skills|$))/i);
-	if (employmentMatch) {
-		const jobs = [];
-		const jobBlocks = employmentMatch[1].split(/\n(?=[A-Z])/);
-		for (const block of jobBlocks) {
-			const lines = block.split('\n').filter(l => l.trim());
-			if (lines.length > 0) {
-				jobs.push({
-					title: lines[0] || '',
-					company: lines[1] || '',
-					dates: lines[2] || '',
-					description: lines.slice(3).join(' '),
-				});
-			}
-		}
-		result.employment = jobs;
-	}
-
-	const educationMatch = text.match(/Education([\s\S]*?)(?=\n\n(?:Certification|Skills|$))/i);
-	if (educationMatch) {
-		const education = [];
-		const eduBlocks = educationMatch[1].split(/\n(?=[A-Z])/);
-		for (const block of eduBlocks) {
-			const lines = block.split('\n').filter(l => l.trim());
-			if (lines.length > 0) {
-				education.push({
-					degree: lines[0] || '',
-					school: lines[1] || '',
-					dates: lines[2],
-				});
-			}
-		}
-		result.education = education;
-	}
-
-	const certMatch = text.match(/Certification[s]?([\s\S]*?)(?=\n\n(?:Skills|$))/i);
-	if (certMatch) {
-		result.certifications = certMatch[1]
-			.split('\n')
-			.map(c => c.trim())
-			.filter(c => c && !c.startsWith('-'));
-	}
-
-	return result;
-}
-
-export function ClassicTemplate({ optimizedCV, keywords }: CVData) {
-	const parsed = parseCV(optimizedCV);
+export function ClassicTemplate({ cv, keywords }: TemplateProps) {
+	const contactLine = [cv.contact.email, cv.contact.phone, cv.contact.location]
+		.filter(Boolean)
+		.join('  |  ');
 
 	return (
 		<Document>
 			<Page size="A4" style={styles.page}>
-				{parsed.header && (
-					<View style={styles.header}>
-						<Text style={styles.name}>{parsed.header.name}</Text>
-						<Text style={styles.title}>{parsed.header.title}</Text>
-						<Text style={styles.contact}>{parsed.header.contact}</Text>
-					</View>
-				)}
+				<View style={styles.header}>
+					<Text style={styles.name}>{cv.name}</Text>
+					<Text style={styles.title}>{cv.title}</Text>
+					<Text style={styles.contact}>{contactLine}</Text>
+				</View>
 
-				{parsed.profile && (
+				{cv.profile && (
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>Professional Summary</Text>
 						<Text style={{ fontSize: 9, color: '#333333', lineHeight: 1.5 }}>
-							{parsed.profile}
+							{cv.profile}
 						</Text>
 					</View>
 				)}
 
-				{parsed.employment && parsed.employment.length > 0 && (
+				{cv.key_accomplishments && cv.key_accomplishments.length > 0 && (
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>Key Accomplishments</Text>
+						{cv.key_accomplishments.map((acc, idx) => (
+							<Text key={idx} style={{ fontSize: 9, color: '#333333', marginBottom: 3, lineHeight: 1.3 }}>
+								• {acc}
+							</Text>
+						))}
+					</View>
+				)}
+
+				{cv.experience.length > 0 && (
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>Professional Experience</Text>
-						{parsed.employment.map((job, idx) => (
+						{cv.experience.map((job, idx) => (
 							<View key={idx} style={{ marginBottom: 10 }}>
 								<View style={styles.jobHeader}>
 									<Text style={styles.jobTitle}>{job.title}</Text>
@@ -201,10 +139,10 @@ export function ClassicTemplate({ optimizedCV, keywords }: CVData) {
 					</View>
 				)}
 
-				{parsed.education && parsed.education.length > 0 && (
+				{cv.education.length > 0 && (
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>Education</Text>
-						{parsed.education.map((edu, idx) => (
+						{cv.education.map((edu, idx) => (
 							<View key={idx} style={styles.educationItem}>
 								<Text style={styles.degreeTitle}>{edu.degree}</Text>
 								<Text style={styles.school}>{edu.school}</Text>
@@ -214,12 +152,32 @@ export function ClassicTemplate({ optimizedCV, keywords }: CVData) {
 					</View>
 				)}
 
-				{keywords && keywords.length > 0 && (
+				{keywords.length > 0 && (
 					<View style={styles.section}>
 						<Text style={styles.sectionTitle}>Key Skills</Text>
 						<Text style={styles.skillsList}>
 							{keywords.join(' • ')}
 						</Text>
+					</View>
+				)}
+
+				{cv.tools && cv.tools.length > 0 && (
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>Tools & Technologies</Text>
+						<Text style={styles.skillsList}>
+							{cv.tools.join(' • ')}
+						</Text>
+					</View>
+				)}
+
+				{cv.languages && cv.languages.length > 0 && (
+					<View style={styles.section}>
+						<Text style={styles.sectionTitle}>Languages</Text>
+						{cv.languages.map((lang, idx) => (
+							<Text key={idx} style={{ fontSize: 9, color: '#333333', marginBottom: 2 }}>
+								{lang}
+							</Text>
+						))}
 					</View>
 				)}
 			</Page>
