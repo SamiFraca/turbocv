@@ -5,10 +5,12 @@ import { useTranslations } from "next-intl";
 import PaymentModal from "./payment-modal";
 import { downloadPDF } from "../lib/pdf-render";
 import { getAllTemplates, TemplateType } from "../lib/cv-templates";
+import type { StructuredCV } from "../lib/cv-types";
 
 interface ResultViewProps {
 	result: {
 		optimizedCV: string;
+		cvData?: StructuredCV;
 		keywords: string[];
 		pdfBase64?: string;
 	};
@@ -30,6 +32,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 			await downloadPDF(
 				{
 					optimizedCV: result.optimizedCV,
+					cvData: result.cvData,
 					keywords: result.keywords,
 				},
 				selectedTemplate,

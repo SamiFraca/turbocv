@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import CVForm from "./cv-form";
 import ResultView from "./result-view";
+import type { StructuredCV } from "../lib/cv-types";
 
 export default function HomePage() {
 	const t = useTranslations("home");
 	const locale = useLocale();
 	const [result, setResult] = useState<{
 		optimizedCV: string;
+		cvData?: StructuredCV;
 		keywords: string[];
 	} | null>(null);
 

@@ -1,23 +1,39 @@
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
 import { getTemplate, TemplateType } from './cv-templates';
+import type { StructuredCV, TemplateProps } from './cv-types';
 
 interface CVData {
 	optimizedCV: string;
+	cvData?: StructuredCV;
 	keywords: string[];
 }
+
+const DEFAULT_CV: StructuredCV = {
+	name: '',
+	title: '',
+	contact: { email: '', phone: '', location: '' },
+	profile: '',
+	experience: [],
+	education: [],
+	certifications: [],
+	skills: [],
+};
 
 export async function generatePDFBlob(data: CVData, templateType: TemplateType = 'modern'): Promise<Blob> {
 	try {
 		const template = getTemplate(templateType);
-		const TemplateComponent = template.component;
+		const TemplateComponent = template.component as React.FC<TemplateProps>;
 		
-		const doc = React.createElement(TemplateComponent, {
-			optimizedCV: data.optimizedCV,
+		const props: TemplateProps = {
+			cv: data.cvData ?? DEFAULT_CV,
 			keywords: data.keywords,
-		});
+		};
+
+		const doc = React.createElement(TemplateComponent, props);
 		
-		const blob = await pdf(doc).toBlob();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const blob = await pdf(doc as any).toBlob();
 		return blob;
 	} catch (error) {
 		console.error('Error generating PDF:', error);

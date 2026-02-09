@@ -7,7 +7,7 @@ async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: stri
 	try {
 		// Load the original PDF
 		const pdfDoc = await PDFDocument.load(pdfBuffer);
-		const pages = pdfDoc.getPages();
+		let pages = pdfDoc.getPages();
 		
 		if (pages.length === 0) {
 			throw new Error("PDF has no pages");
@@ -36,11 +36,12 @@ async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: stri
 					pageIndex++;
 					if (pageIndex >= pages.length) {
 						pdfDoc.addPage([width, height]);
+						pages = pdfDoc.getPages();
 					}
 					yPosition = height - margin;
 				}
 				
-				const currentPage = pages[pageIndex] || pdfDoc.getPage(pageIndex);
+				const currentPage = pages[pageIndex];
 				
 				// Draw a white rectangle to cover the area (preserves images below)
 				currentPage.drawRectangle({
@@ -48,7 +49,7 @@ async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: stri
 					y: yPosition - 8,
 					width: maxWidth + 4,
 					height: lineHeight,
-					color: rgb(255, 255, 255),
+					color: rgb(1, 1, 1),
 					opacity: 0.95,
 				});
 				
@@ -173,7 +174,63 @@ export async function POST(req: NextRequest) {
 		console.log("=== Calling OpenAI Responses API ===");
 		console.log("Model: gpt-4o-mini");
 		console.log("File ID:", uploadResult.id);
-		
+
+		const prompt = `${jobOffer}
+
+Please return a JSON object with the EXACT structure below.
+All fields are required. Do NOT add extra fields.
+
+Rules:
+- Optimize the CV specifically for the job offer above.
+- Use the SAME language as the original CV.
+- Prioritize measurable achievements (numbers, %, €, scale, time).
+- Mirror terminology and keywords from the job offer for ATS optimization.
+- Use reverse chronological order for experience and education.
+- Avoid filler adjectives (e.g., “motivated”, “passionate”).
+- Keep descriptions concise, impact-focused, and evidence-based.
+
+JSON structure:
+{
+  "name": "Full name",
+  "title": "Professional title aligned with job offer",
+  "contact": {
+    "email": "email",
+    "phone": "phone",
+    "location": "city/location",
+    "links": {
+      "linkedin": "URL",
+      "github": "URL or N/A",
+      "portfolio": "URL or N/A"
+    }
+  },
+  "profile": "2–3 sentence professional summary highlighting role fit, years of experience, and key value proposition",
+  "key_accomplishments": [
+    "Quantified achievement directly relevant to the role",
+    "Second quantified achievement"
+  ],
+  "experience": [
+    {
+      "title": "Job Title",
+      "company": "Company Name",
+      "dates": "Start - End",
+      "description": "Achievement-focused description including metrics and tools used"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree name",
+      "school": "School name",
+      "dates": "Year"
+    }
+  ],
+  "certifications": ["Certification 1"],
+  "skills": ["Skill1", "Skill2"],	
+  "tools": ["Tool1", "Tool2"],
+  "languages": ["Language – Level"],
+  "keywords": ["keyword1", "keyword2"]
+}
+`;
+
 		const requestBody = {
 			model: "gpt-4o-mini",
 			input: [
@@ -186,7 +243,7 @@ export async function POST(req: NextRequest) {
                     },
                     {
                         "type": "input_text",
-                        "text": jobOffer + "\n\nPlease return a JSON with:\n{\n  \"optimizedCV\": \"Rewritten complete CV\",\n  \"keywords\": [\"keyword1\", \"keyword2\", \"keyword3\"]\n}"
+                        "text": prompt
                     }
                 ]
             }
@@ -248,7 +305,7 @@ export async function POST(req: NextRequest) {
 			throw new Error("Invalid response from OpenAI API");
 		}
 		
-		console.log("Raw content from OpenAI:", content.substring(0, 200) + "...");
+		console.log("Raw content from OpenAI:", content);
 		
 		// Extract JSON from markdown code blocks if present
 		let jsonString = content;
@@ -260,8 +317,36 @@ export async function POST(req: NextRequest) {
 		
 		const result = JSON.parse(jsonString);
 		console.log("Parsed result keys:", Object.keys(result));
-		console.log("Optimized CV length:", result.optimizedCV?.length);
-		console.log("Keywords count:", result.keywords?.length);
+
+		// Build structured CV data
+		const cvData = {
+			name: result.name || '',
+			title: result.title || '',
+			contact: result.contact || { email: '', phone: '', location: '' },
+			profile: result.profile || '',
+			experience: result.experience || [],
+			education: result.education || [],
+			certifications: result.certifications || [],
+			skills: result.skills || [],
+		};
+
+		// Build flat text for the PDF overlay (backward compat)
+		const flatCV = [
+			cvData.name,
+			cvData.title,
+			`${cvData.contact.email} | ${cvData.contact.phone} | ${cvData.contact.location}`,
+			'',
+			cvData.profile,
+			'',
+			...cvData.experience.flatMap((job: { title: string; company: string; dates: string; description: string }) => [
+				`${job.title} - ${job.company} (${job.dates})`,
+				job.description,
+				'',
+			]),
+			...cvData.education.map((edu: { degree: string; school: string; dates: string }) => `${edu.degree} - ${edu.school} (${edu.dates})`),
+		].join('\n');
+
+		const keywords = result.keywords || cvData.skills || [];
 
 		console.log("=== Cleaning up uploaded file ===");
 		try {
@@ -275,19 +360,16 @@ export async function POST(req: NextRequest) {
 		} catch (cleanupError) {
 			console.warn("Failed to delete file:", cleanupError);
 		}
-		console.log("Parsed result keys:", Object.keys(result));
-		console.log("Optimized CV length:", result.optimizedCV?.length);
-		console.log("Keywords count:", result.keywords?.length);
 
 		console.log("=== Modifying original PDF with optimized CV ===");
 		const pdfBuffer = await pdfFile.arrayBuffer();
-		const pdfBase64 = await modifyPDFWithOptimizedText(Buffer.from(pdfBuffer), result.optimizedCV);
+		const pdfBase64 = await modifyPDFWithOptimizedText(Buffer.from(pdfBuffer), flatCV);
 		console.log("PDF modified, base64 length:", pdfBase64.length);
 
-		console.log("=== API Request Completed Successfully ===");
 		return NextResponse.json({
-			optimizedCV: result.optimizedCV,
-			keywords: result.keywords || [],
+			optimizedCV: flatCV,
+			cvData,
+			keywords,
 			pdfBase64
 		});
 	} catch (error: unknown) {
