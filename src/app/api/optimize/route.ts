@@ -286,7 +286,8 @@ export async function POST(req: NextRequest) {
 
 		console.log("=== API Request Completed Successfully ===");
 		return NextResponse.json({
-			...result,
+			optimizedCV: result.optimizedCV,
+			keywords: result.keywords || [],
 			pdfBase64
 		});
 	} catch (error: unknown) {
