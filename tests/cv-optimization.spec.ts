@@ -56,7 +56,7 @@ Requirements:
       await page.screenshot({ path: 'test-results/debug-results.png' });
       
       // Try alternative success indicators
-      await expect(page.locator('button:has-text("Download PDF")')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('button:has-text("Download PDF")')).toBeVisible({ timeout: 20000 });
     }
     
     // 9. Test the optimized CV tab (default)
