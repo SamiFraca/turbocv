@@ -51,7 +51,11 @@
     "jobLabel": "Job Offer",
     "jobPlaceholder": "Paste the job description here...",
     "optimizeButton": "Optimize My CV",
-    "analyzing": "Analyzing...",
+    "analyzing": "Analyzing your CV...",
+    "extractingSkills": "Extracting skills and experience...",
+    "matchingKeywords": "Matching keywords to job offer...",
+    "optimizingContent": "Optimizing content for ATS...",
+    "finalizing": "Finalizing your optimized CV...",
     "pdfAlert": "Please upload a PDF file",
     "pdfError": "Error reading PDF: {error}\n\nTry copying and pasting the text.",
     "features": {

@@ -51,7 +51,11 @@
     "jobLabel": "Oferta de trabajo",
     "jobPlaceholder": "Pega aquí la descripción de la oferta...",
     "optimizeButton": "Optimizar mi CV",
-    "analyzing": "Analizando...",
+    "analyzing": "Analizando tu CV...",
+    "extractingSkills": "Extrayendo habilidades y experiencia...",
+    "matchingKeywords": "Coincidiendo palabras clave con la oferta...",
+    "optimizingContent": "Optimizando contenido para ATS...",
+    "finalizing": "Finalizando tu CV optimizado...",
     "pdfAlert": "Por favor, sube un archivo PDF",
     "pdfError": "Error al leer el PDF: {error}\n\nIntenta copiar y pegar el texto.",
     "features": {

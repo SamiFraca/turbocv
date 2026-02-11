@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 interface CVFormProps {
@@ -15,9 +15,37 @@ export default function CVForm({ onOptimize, error }: CVFormProps) {
 	const [jobOffer, setJobOffer] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [isDragging, setIsDragging] = useState(false);
+	const [loadingProgress, setLoadingProgress] = useState(0);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	
+	// Loading phrases that change based on progress
+	const getLoadingPhrase = (progress: number) => {
+		if (progress < 20) return t("analyzing");
+		if (progress < 40) return t("extractingSkills");
+		if (progress < 60) return t("matchingKeywords");
+		if (progress < 80) return t("optimizingContent");
+		return t("finalizing");
+	};
+
+	// Animate loading progress from 0% to 99%
+	useEffect(() => {
+		if (isLoading) {
+			setLoadingProgress(0);
+			const interval = setInterval(() => {
+				setLoadingProgress((prev) => {
+					if (prev >= 99) return 99;
+					const increment = Math.random() * 15 + 5; 
+					const newProgress = prev + increment;
+					return newProgress >= 99 ? 99 : newProgress;
+				});
+			}, Math.random() * 1300 + 700); 
+
+			return () => clearInterval(interval);
+		} else {
+			setLoadingProgress(0);
+		}
+	}, [isLoading]);
+
 	const processPDFFile = async (file: File) => {
 		if (file.type !== "application/pdf") {
 			alert(t("pdfAlert"));
@@ -149,11 +177,14 @@ export default function CVForm({ onOptimize, error }: CVFormProps) {
 
 				{isLoading ? (
 					<div className="space-y-4">
-						<div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-							<div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '75%' }} />
+						<div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden animate-pulse">
+							<div 
+								className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out " 
+								style={{ width: `${loadingProgress}%` }} 
+							/>
 						</div>
 						<p className="text-center text-slate-600 text-sm font-medium">
-							{t("analyzing")}
+							{getLoadingPhrase(loadingProgress)}
 						</p>
 					</div>
 				) : (
