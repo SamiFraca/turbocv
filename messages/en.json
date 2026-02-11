@@ -1,7 +1,47 @@
 {
   "home": {
     "title": "Tailor your CV to each offer in 60 seconds",
-    "subtitle": "Designed to pass ATS filters, not to sound pretty"
+    "subtitle": "Designed to pass ATS filters, not to sound pretty",
+    "error": "Something went wrong. Please try again.",
+    "cta": "Optimize Now",
+    "badge": "AI-Powered ATS Optimization",
+    "heroBullets": {
+      "noSignup": "No signup required",
+      "sixtySeconds": "Results in 60 seconds",
+      "fiveTemplates": "5 professional templates"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "subtitle": "Three simple steps to land more interviews",
+      "step1Title": "Upload your CV",
+      "step1Desc": "Upload your existing CV as a PDF file",
+      "step2Title": "Paste the job offer",
+      "step2Desc": "Copy and paste the job description you want to apply for",
+      "step3Title": "Download optimized CV",
+      "step3Desc": "Get your ATS-optimized CV in your preferred template"
+    },
+    "beforeAfter": {
+      "title": "See the Difference",
+      "subtitle": "Generic CVs get filtered out. Optimized CVs get interviews.",
+      "beforeTitle": "Before — Generic CV",
+      "beforeProfile": "Motivated developer with experience in web technologies. Team player who is passionate about coding.",
+      "beforeExp": "Worked on various web projects using different technologies. Responsible for frontend development.",
+      "afterTitle": "After — ATS-Optimized",
+      "afterProfile": "Frontend Developer with 3+ years building scalable React/TypeScript applications. Reduced bundle size by 40% and improved Core Web Vitals scores across 12 client projects.",
+      "afterExp": "Led frontend architecture for 3 enterprise applications using React 18, TypeScript, and Next.js. Implemented component library adopted by 4 cross-functional teams."
+    },
+    "testimonials": {
+      "title": "What Our Users Say",
+      "review1": "Got 3 interview callbacks in the first week after using TurboCV. The ATS optimization actually works.",
+      "name1": "Laura M.",
+      "role1": "UX Designer",
+      "review2": "I was sending the same CV everywhere. TurboCV helped me tailor it for each role — landed my dream job.",
+      "name2": "Carlos R.",
+      "role2": "Backend Developer",
+      "review3": "The before/after difference is incredible. My CV finally reads like a professional wrote it.",
+      "name3": "Ana P.",
+      "role3": "Product Manager"
+    }
   },
   "cvForm": {
     "cvLabel": "Your CV (copy and paste text or upload PDF)",
@@ -38,8 +78,22 @@
     },
     "unlocked": {
       "title": "Your Optimized CV",
-      "keywordsLabel": "Keywords added:",
+      "profileLabel": "Profile",
+      "accomplishmentsLabel": "Key Accomplishments",
+      "experienceLabel": "Experience",
+      "educationLabel": "Education",
+      "skillsLabel": "Skills",
+      "toolsLabel": "Tools & Technologies",
+      "languagesLabel": "Languages",
+      "certificationsLabel": "Certifications",
+      "keywordsLabel": "ATS Keywords:",
+      "templateLabel": "Choose PDF Template",
       "downloadButton": "📄 Download PDF",
+      "generatingPDF": "Generating PDF...",
+      "tabOptimized": "Optimized CV",
+      "tabComparison": "Before / After",
+      "beforeLabel": "Original CV",
+      "afterLabel": "Optimized CV",
       "newCV": "New CV →"
     }
   },

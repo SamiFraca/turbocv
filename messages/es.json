@@ -1,7 +1,47 @@
 {
   "home": {
     "title": "Ajusta tu CV a cada oferta en 60 segundos",
-    "subtitle": "Diseñado para pasar filtros ATS, no para sonar bonito"
+    "subtitle": "Diseñado para pasar filtros ATS, no para sonar bonito",
+    "error": "Algo salió mal. Por favor, inténtalo de nuevo.",
+    "cta": "Optimizar ahora",
+    "badge": "Optimización ATS con IA",
+    "heroBullets": {
+      "noSignup": "Sin registro",
+      "sixtySeconds": "Resultados en 60 segundos",
+      "fiveTemplates": "5 plantillas profesionales"
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "subtitle": "Tres pasos sencillos para conseguir más entrevistas",
+      "step1Title": "Sube tu CV",
+      "step1Desc": "Sube tu CV actual en formato PDF",
+      "step2Title": "Pega la oferta",
+      "step2Desc": "Copia y pega la descripción del puesto al que quieres aplicar",
+      "step3Title": "Descarga tu CV optimizado",
+      "step3Desc": "Obtén tu CV optimizado para ATS en la plantilla que prefieras"
+    },
+    "beforeAfter": {
+      "title": "Mira la Diferencia",
+      "subtitle": "Los CVs genéricos se filtran. Los CVs optimizados consiguen entrevistas.",
+      "beforeTitle": "Antes — CV Genérico",
+      "beforeProfile": "Desarrollador motivado con experiencia en tecnologías web. Trabajo en equipo y apasionado por la programación.",
+      "beforeExp": "Trabajé en varios proyectos web usando diferentes tecnologías. Responsable del desarrollo frontend.",
+      "afterTitle": "Después — Optimizado para ATS",
+      "afterProfile": "Desarrollador Frontend con 3+ años construyendo aplicaciones escalables con React/TypeScript. Reducción del bundle en un 40% y mejora de Core Web Vitals en 12 proyectos.",
+      "afterExp": "Lideré la arquitectura frontend de 3 aplicaciones enterprise con React 18, TypeScript y Next.js. Implementé librería de componentes adoptada por 4 equipos multidisciplinares."
+    },
+    "testimonials": {
+      "title": "Lo Que Dicen Nuestros Usuarios",
+      "review1": "Recibí 3 llamadas para entrevistas en la primera semana. La optimización ATS realmente funciona.",
+      "name1": "Laura M.",
+      "role1": "Diseñadora UX",
+      "review2": "Enviaba el mismo CV a todas partes. TurboCV me ayudó a personalizarlo para cada puesto — conseguí mi trabajo soñado.",
+      "name2": "Carlos R.",
+      "role2": "Desarrollador Backend",
+      "review3": "La diferencia antes/después es increíble. Mi CV por fin suena como si lo hubiera escrito un profesional.",
+      "name3": "Ana P.",
+      "role3": "Product Manager"
+    }
   },
   "cvForm": {
     "cvLabel": "Tu CV (copia y pega el texto o sube PDF)",
@@ -38,8 +78,22 @@
     },
     "unlocked": {
       "title": "Tu CV Optimizado",
-      "keywordsLabel": "Palabras clave añadidas:",
+      "profileLabel": "Perfil",
+      "accomplishmentsLabel": "Logros Clave",
+      "experienceLabel": "Experiencia",
+      "educationLabel": "Educación",
+      "skillsLabel": "Habilidades",
+      "toolsLabel": "Herramientas y Tecnologías",
+      "languagesLabel": "Idiomas",
+      "certificationsLabel": "Certificaciones",
+      "keywordsLabel": "Palabras clave ATS:",
+      "templateLabel": "Elige plantilla PDF",
       "downloadButton": "📄 Descargar PDF",
+      "generatingPDF": "Generando PDF...",
+      "tabOptimized": "CV Optimizado",
+      "tabComparison": "Antes / Después",
+      "beforeLabel": "CV Original",
+      "afterLabel": "CV Optimizado",
       "newCV": "Nuevo CV →"
     }
   },
