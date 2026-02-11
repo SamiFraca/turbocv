@@ -177,43 +177,57 @@ export async function POST(req: NextRequest) {
 
 		const prompt = `${jobOffer}
 
-Please return a JSON object with the EXACT structure below.
-All fields are required. Do NOT add extra fields.
+You are a senior CV strategist and talent acquisition expert. Your task is to optimize the attached CV for this specific job offer.
 
-Rules:
-- Optimize the CV specifically for the job offer above.
-- Use the SAME language as the original CV.
-- Prioritize measurable achievements (numbers, %, €, scale, time).
-- Mirror terminology and keywords from the job offer for ATS optimization.
-- Use reverse chronological order for experience and education.
-- Avoid filler adjectives (e.g., “motivated”, “passionate”).
-- Keep descriptions concise, impact-focused, and evidence-based.
+## CRITICAL REQUIREMENTS
 
-JSON structure:
+### Profile Section (2-3 structured paragraphs):
+- Paragraph 1: Professional identity (years experience + core specialization)
+- Paragraph 2: Key achievements directly relevant to the job offer
+- Paragraph 3: Value proposition with 2-3 most relevant skills from the job requirements
+- Use professional, confident tone without generic adjectives
+- Mirror terminology from the job offer where authentic
+
+### Content Rules:
+- Extract and integrate keywords naturally from the job offer
+- Quantify achievements with metrics (%, €, time, scale, team size)
+- Maintain 100% factual accuracy - no exaggeration or fabrication
+- Use reverse chronological order
+- Write in the SAME language as the original CV
+- Keep descriptions impact-focused and evidence-based
+
+### Skills Alignment:
+- Prioritize skills that appear in BOTH the CV and job offer
+- Group skills logically (technical, soft, domain-specific)
+- Include proficiency levels when evident from experience
+
+## JSON OUTPUT STRUCTURE
+Return ONLY this exact JSON structure:
+
 {
-  "name": "Full name",
+  "name": "Full name from CV",
   "title": "Professional title aligned with job offer",
   "contact": {
     "email": "email",
-    "phone": "phone",
+    "phone": "phone", 
     "location": "city/location",
     "links": {
-      "linkedin": "URL",
+      "linkedin": "URL or N/A",
       "github": "URL or N/A",
       "portfolio": "URL or N/A"
     }
   },
-  "profile": "2–3 sentence professional summary highlighting role fit, years of experience, and key value proposition",
+  "profile": "2-3 structured paragraphs: 1) Professional identity, 2) Relevant achievements, 3) Value proposition with aligned skills",
   "key_accomplishments": [
     "Quantified achievement directly relevant to the role",
-    "Second quantified achievement"
+    "Second quantified achievement with specific metrics"
   ],
   "experience": [
     {
       "title": "Job Title",
-      "company": "Company Name",
+      "company": "Company Name", 
       "dates": "Start - End",
-      "description": "Achievement-focused description including metrics and tools used"
+      "description": "Achievement-focused description with metrics, tools, and business impact"
     }
   ],
   "education": [
@@ -224,12 +238,13 @@ JSON structure:
     }
   ],
   "certifications": ["Certification 1"],
-  "skills": ["Skill1", "Skill2"],	
+  "skills": ["Skill1", "Skill2"],
   "tools": ["Tool1", "Tool2"],
   "languages": ["Language – Level"],
   "keywords": ["keyword1", "keyword2"]
 }
-`;
+
+Remember: Profile must be 2-3 structured paragraphs that naturally integrate key skills from both the CV and job offer.`;
 
 		const requestBody = {
 			model: "gpt-4o-mini",
