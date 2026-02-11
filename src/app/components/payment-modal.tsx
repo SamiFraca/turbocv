@@ -7,7 +7,7 @@ import {
 	useStripe,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 const stripePromise = loadStripe(
@@ -84,7 +84,7 @@ export default function PaymentModal({
 }: PaymentFormProps) {
 	const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-	useState(() => {
+	useEffect(() => {
 		fetch("/api/payment", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ export default function PaymentModal({
 		})
 			.then((res) => res.json())
 			.then((data) => setClientSecret(data.clientSecret));
-	});
+	}, []);
 
 	if (!clientSecret) {
 		return (

@@ -5,9 +5,10 @@ import { useTranslations } from "next-intl";
 
 interface CVFormProps {
 	onOptimize: (pdfFile: File, jobOffer: string) => Promise<void>;
+	error?: string | null;
 }
 
-export default function CVForm({ onOptimize }: CVFormProps) {
+export default function CVForm({ onOptimize, error }: CVFormProps) {
 	const t = useTranslations("cvForm");
 	const [pdfFile, setPdfFile] = useState<File | null>(null);
 	const [cvFileName, setCvFileName] = useState("");
@@ -140,14 +141,31 @@ export default function CVForm({ onOptimize }: CVFormProps) {
 					/>
 				</div>
 
-				<button
-					type="button"
-					onClick={handleSubmit}
-					disabled={!pdfFile || !jobOffer.trim() || isLoading}
-					className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-lg"
-				>
-					{isLoading ? t("analyzing") : t("optimizeButton")}
-				</button>
+				{error && (
+					<div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm" role="alert">
+						{error}
+					</div>
+				)}
+
+				{isLoading ? (
+					<div className="space-y-4">
+						<div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+							<div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '75%' }} />
+						</div>
+						<p className="text-center text-slate-600 text-sm font-medium">
+							{t("analyzing")}
+						</p>
+					</div>
+				) : (
+					<button
+						type="button"
+						onClick={handleSubmit}
+						disabled={!pdfFile || !jobOffer.trim()}
+						className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors text-lg"
+					>
+						{t("optimizeButton")}
+					</button>
+				)}
 			</div>
 
 			<div className="mt-12 pt-8 border-t border-slate-100">

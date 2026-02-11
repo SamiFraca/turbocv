@@ -12,6 +12,7 @@ interface ResultViewProps {
 		optimizedCV: string;
 		cvData?: StructuredCV;
 		keywords: string[];
+		originalText?: string;
 		pdfBase64?: string;
 	};
 	onReset: () => void;
@@ -23,7 +24,8 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 	const [showPaymentForm, setShowPaymentForm] = useState(false);
 	const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("modern");
 	const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-	const isDebugging = true;
+	const [activeTab, setActiveTab] = useState<"optimized" | "comparison">("optimized");
+	const isDebugging = process.env.NEXT_PUBLIC_DEBUG_MODE === "true";
 	const templates = getAllTemplates();
 
 	const handleDownloadPDF = async () => {
@@ -118,32 +120,183 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						</button>
 					</div>
 
-					{result.keywords && result.keywords.length > 0 && (
-						<div className="mb-6">
-							<h3 className="font-semibold text-slate-700 mb-2">
-								{tResult("unlocked.keywordsLabel")}
-							</h3>
-							<div className="flex flex-wrap gap-2">
-								{result.keywords.map((kw) => (
-									<span
-										key={kw}
-										className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-									>
-										{kw}
-									</span>
-								))}
-							</div>
+					{result.originalText && (
+						<div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-lg">
+							<button
+								type="button"
+								onClick={() => setActiveTab("optimized")}
+								className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+									activeTab === "optimized"
+										? "bg-white text-slate-900 shadow-sm"
+										: "text-slate-500 hover:text-slate-700"
+								}`}
+							>
+								{tResult("unlocked.tabOptimized")}
+							</button>
+							<button
+								type="button"
+								onClick={() => setActiveTab("comparison")}
+								className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+									activeTab === "comparison"
+										? "bg-white text-slate-900 shadow-sm"
+										: "text-slate-500 hover:text-slate-700"
+								}`}
+							>
+								{tResult("unlocked.tabComparison")}
+							</button>
 						</div>
 					)}
 
-					<div className="bg-slate-50 rounded-lg p-6 mb-6">
-						<pre className="whitespace-pre-wrap text-sm text-slate-700 font-mono leading-relaxed">
-							{result.optimizedCV}
-						</pre>
-					</div>
+					{activeTab === "comparison" && result.originalText ? (
+						<div className="grid md:grid-cols-2 gap-4 mb-6">
+							<div className="border border-red-200 rounded-xl p-5 bg-red-50/30">
+								<div className="flex items-center gap-2 mb-3">
+									<span className="text-red-500">✗</span>
+									<h3 className="text-sm font-semibold text-red-800">{tResult("unlocked.beforeLabel")}</h3>
+								</div>
+								<pre className="whitespace-pre-wrap text-xs text-slate-600 leading-relaxed max-h-96 overflow-y-auto">
+									{result.originalText}
+								</pre>
+							</div>
+							<div className="border border-green-200 rounded-xl p-5 bg-green-50/30">
+								<div className="flex items-center gap-2 mb-3">
+									<span className="text-green-500">✓</span>
+									<h3 className="text-sm font-semibold text-green-800">{tResult("unlocked.afterLabel")}</h3>
+								</div>
+								<pre className="whitespace-pre-wrap text-xs text-slate-600 leading-relaxed max-h-96 overflow-y-auto">
+									{result.optimizedCV}
+								</pre>
+							</div>
+						</div>
+					) : (
+						<>
+							{result.cvData && (
+								<div className="space-y-5 mb-6">
+									<div className="bg-slate-50 rounded-lg p-6">
+										<h3 className="text-lg font-bold text-slate-900">{result.cvData.name}</h3>
+										<p className="text-sm text-slate-600">{result.cvData.title}</p>
+										<p className="text-xs text-slate-500 mt-1">
+											{[result.cvData.contact.email, result.cvData.contact.phone, result.cvData.contact.location].filter(Boolean).join(' · ')}
+										</p>
+									</div>
+
+									{result.cvData.profile && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.profileLabel")}</h4>
+											<p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{result.cvData.profile}</p>
+										</div>
+									)}
+
+									{result.cvData.key_accomplishments && result.cvData.key_accomplishments.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.accomplishmentsLabel")}</h4>
+											<ul className="space-y-1">
+												{result.cvData.key_accomplishments.map((acc, idx) => (
+													<li key={idx} className="text-sm text-slate-700 flex gap-2">
+														<span className="text-blue-500 shrink-0">•</span> {acc}
+													</li>
+												))}
+											</ul>
+										</div>
+									)}
+
+									{result.cvData.experience.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.experienceLabel")}</h4>
+											<div className="space-y-3">
+												{result.cvData.experience.map((job, idx) => (
+													<div key={idx} className="border-l-2 border-blue-200 pl-4">
+														<div className="flex justify-between items-start">
+															<p className="text-sm font-semibold text-slate-800">{job.title}</p>
+															<span className="text-xs text-slate-500 shrink-0 ml-2">{job.dates}</span>
+														</div>
+														<p className="text-xs text-slate-600">{job.company}</p>
+														<p className="text-sm text-slate-700 mt-1 leading-relaxed">{job.description}</p>
+													</div>
+												))}
+											</div>
+										</div>
+									)}
+
+									{result.cvData.education.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.educationLabel")}</h4>
+											{result.cvData.education.map((edu, idx) => (
+												<div key={idx} className="text-sm text-slate-700">
+													<span className="font-medium">{edu.degree}</span> — {edu.school} {edu.dates && <span className="text-slate-500">({edu.dates})</span>}
+												</div>
+											))}
+										</div>
+									)}
+
+									{result.cvData.skills.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.skillsLabel")}</h4>
+											<div className="flex flex-wrap gap-2">
+												{result.cvData.skills.map((skill) => (
+													<span key={skill} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{skill}</span>
+												))}
+											</div>
+										</div>
+									)}
+
+									{result.cvData.tools && result.cvData.tools.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.toolsLabel")}</h4>
+											<div className="flex flex-wrap gap-2">
+												{result.cvData.tools.map((tool) => (
+													<span key={tool} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">{tool}</span>
+												))}
+											</div>
+										</div>
+									)}
+
+									{result.cvData.languages && result.cvData.languages.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.languagesLabel")}</h4>
+											<div className="flex flex-wrap gap-2">
+												{result.cvData.languages.map((lang) => (
+													<span key={lang} className="text-sm text-slate-700">{lang}</span>
+												))}
+											</div>
+										</div>
+									)}
+
+									{result.cvData.certifications.length > 0 && (
+										<div>
+											<h4 className="text-sm font-semibold text-slate-800 mb-2 uppercase tracking-wide">{tResult("unlocked.certificationsLabel")}</h4>
+											<ul className="space-y-1">
+												{result.cvData.certifications.map((cert, idx) => (
+													<li key={idx} className="text-sm text-slate-700">{cert}</li>
+												))}
+											</ul>
+										</div>
+									)}
+								</div>
+							)}
+
+							{result.keywords && result.keywords.length > 0 && (
+								<div className="mb-6">
+									<h3 className="font-semibold text-slate-700 mb-2">
+										{tResult("unlocked.keywordsLabel")}
+									</h3>
+									<div className="flex flex-wrap gap-2">
+										{result.keywords.map((kw) => (
+											<span
+												key={kw}
+												className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium"
+											>
+												{kw}
+											</span>
+										))}
+									</div>
+								</div>
+							)}
+						</>
+					)}
 
 					<div className="mb-6">
-						<h3 className="font-semibold text-slate-700 mb-3">Choose PDF Template</h3>
+						<h3 className="font-semibold text-slate-700 mb-3">{tResult("unlocked.templateLabel")}</h3>
 						<div className="grid grid-cols-2 md:grid-cols-5 gap-3">
 							{templates.map((template) => (
 								<button
@@ -169,7 +322,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 						disabled={isGeneratingPDF}
 						className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white font-semibold rounded-lg transition-colors text-lg"
 					>
-						{isGeneratingPDF ? "Generating PDF..." : tResult("unlocked.downloadButton")}
+						{isGeneratingPDF ? tResult("unlocked.generatingPDF") : tResult("unlocked.downloadButton")}
 					</button>
 				</div>
 			)}
