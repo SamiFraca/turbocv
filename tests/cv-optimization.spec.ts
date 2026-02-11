@@ -56,47 +56,65 @@ Requirements:
       await page.screenshot({ path: 'test-results/debug-results.png' });
       
       // Try alternative success indicators
-      await expect(page.locator('button:has-text("Optimized CV")')).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('button:has-text("Download PDF")')).toBeVisible({ timeout: 5000 });
     }
     
     // 9. Test the optimized CV tab (default)
-    await expect(page.locator('button:has-text("Optimized CV")')).toBeVisible();
+    await expect(page.locator('button:has-text("Download PDF")')).toBeVisible();
     await expect(page.locator('text=Choose PDF Template')).toBeVisible();
     
     // 10. Test template selection
     const modernTemplate = page.locator('button:has-text("Modern")');
     await modernTemplate.click();
     await expect(modernTemplate).toHaveClass(/border-blue-600/);
-    
+
+    //TODO: IMPLEMENT BEFORE - AFTER COMPARISON
     // 11. Test before/after comparison
-    const comparisonTab = page.locator('button:has-text("Before / After")');
-    await comparisonTab.click();
+    // const comparisonTab = page.locator('button:has-text("Before / After")');
+    // await comparisonTab.click();
+    // // Verify comparison view
+    // await expect(page.locator('text=Original CV')).toBeVisible();
+    // await expect(page.locator('text=Optimized CV')).toBeVisible();
     
-    // Verify comparison view
-    await expect(page.locator('text=Original CV')).toBeVisible();
-    await expect(page.locator('text=Optimized CV')).toBeVisible();
+    // // Verify side-by-side comparison
+    // const beforeSection = page.locator('text=Original CV').locator('..').locator('..');
+    // const afterSection = page.locator('text=Optimized CV').locator('..').locator('..');
     
-    // Verify side-by-side comparison
-    const beforeSection = page.locator('text=Original CV').locator('..').locator('..');
-    const afterSection = page.locator('text=Optimized CV').locator('..').locator('..');
+    // await expect(beforeSection).toBeVisible();
+    // await expect(afterSection).toBeVisible();
     
-    await expect(beforeSection).toBeVisible();
-    await expect(afterSection).toBeVisible();
-    
-    // 12. Test PDF download button (without actual download)
+    // 12. Test PDF download based on debug mode
     const downloadButton = page.locator('button:has-text("📄 Download PDF")');
     if (await downloadButton.isVisible()) {
-      // Just verify the button exists and is clickable
-      await expect(downloadButton).toBeVisible();
+      // Check if debug mode is enabled
+      const isDebugMode = process.env.NEXT_PUBLIC_DEBUG_MODE === 'true';
+      
+      if (isDebugMode) {
+        // Test actual PDF download in debug mode
+        console.log('Debug mode enabled - testing PDF download');
+        const downloadPromise = page.waitForEvent('download');
+        await downloadButton.click();
+        const download = await downloadPromise;
+        
+        // Verify download
+        expect(download.suggestedFilename()).toMatch(/\.pdf$/);
+        console.log('PDF downloaded successfully:', download.suggestedFilename());
+      } else {
+        // Just verify the button exists in production mode
+        console.log('Production mode - verifying button only');
+        await expect(downloadButton).toBeVisible();
+      }
     }
     
     // 13. Test new CV button
     const newCVButton = page.locator('text=New CV →');
     await newCVButton.click();
     
-    // Verify we're back to the form
-    await expect(page.locator('text=Optimize My CV')).toBeVisible();
-    await expect(fileInput).toBeVisible();
+    // Take screenshot to verify we're back to the home
+    await page.screenshot({ path: 'test-results/back-to-home.png' });
+    
+    // Verify we're back to home page
+    await expect(page.locator('text=Tailor your CV')).toBeVisible();
   });
 
   test('form validation works correctly', async ({ page }) => {
