@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { PDFDocument, rgb } from "pdf-lib";
+import { PDFParse } from "pdf-parse";
 
 async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: string): Promise<string> {
 	try {
@@ -339,10 +340,13 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			title: result.title || '',
 			contact: result.contact || { email: '', phone: '', location: '' },
 			profile: result.profile || '',
+			key_accomplishments: result.key_accomplishments || [],
 			experience: result.experience || [],
 			education: result.education || [],
 			certifications: result.certifications || [],
 			skills: result.skills || [],
+			tools: result.tools || [],
+			languages: result.languages || [],
 		};
 
 		// Build flat text for the PDF overlay (backward compat)
@@ -376,8 +380,18 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			console.warn("Failed to delete file:", cleanupError);
 		}
 
-		console.log("=== Modifying original PDF with optimized CV ===");
+		console.log("=== Extracting original PDF text ===");
 		const pdfBuffer = await pdfFile.arrayBuffer();
+		let originalText = '';
+		try {
+			const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+			const textResult = await parser.getText();
+			originalText = textResult.text || '';
+		} catch (parseErr) {
+			console.warn("Failed to extract original PDF text:", parseErr);
+		}
+
+		console.log("=== Modifying original PDF with optimized CV ===");
 		const pdfBase64 = await modifyPDFWithOptimizedText(Buffer.from(pdfBuffer), flatCV);
 		console.log("PDF modified, base64 length:", pdfBase64.length);
 
@@ -385,6 +399,7 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			optimizedCV: flatCV,
 			cvData,
 			keywords,
+			originalText,
 			pdfBase64
 		});
 	} catch (error: unknown) {
