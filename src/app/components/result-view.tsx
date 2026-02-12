@@ -62,7 +62,7 @@ export default function ResultView({ result, onReset }: ResultViewProps) {
 
 					<div className="bg-slate-50 rounded-lg p-6 mb-6 text-left">
 						<h3 className="font-semibold text-slate-800 mb-3">
-							{tResult("locked.featuresTitleddd")}
+							{tResult("locked.featuresTitle")}
 						</h3>
 						<ul className="space-y-2 text-slate-600">
 							<li className="flex items-center gap-2">
