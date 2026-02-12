@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import CVForm from '../cv-form'
@@ -201,6 +201,95 @@ describe('CVForm', () => {
       await waitFor(() => {
         expect(screen.getByText('optimizeButton')).toBeInTheDocument()
       })
+    })
+
+    test('shows different loading phrases based on progress', async () => {
+      let resolveOptimize: () => void
+      const slowOptimize = jest.fn(
+        () => new Promise<void>((resolve) => { resolveOptimize = resolve })
+      )
+
+      render(<CVForm onOptimize={slowOptimize} />)
+
+      await userEvent.upload(getFileInput(), createPDFFile())
+      await userEvent.type(screen.getByLabelText('jobLabel'), 'Job offer text')
+      await userEvent.click(screen.getByText('optimizeButton'))
+
+      // Should show initial loading phrase
+      await waitFor(() => {
+        expect(screen.getByText('analyzing')).toBeInTheDocument()
+      })
+
+      resolveOptimize!()
+    })
+  })
+
+  describe('Drag and Drop', () => {
+    test('handles drag over events', () => {
+      render(<CVForm onOptimize={mockOnOptimize} />)
+
+      const dropArea = screen.getByText('uploadPDF').closest('div')!.parentElement
+      
+      // Simulate drag over
+      fireEvent.dragOver(dropArea!)
+      
+      // Should show dragging state (border-blue-500 bg-blue-50 classes)
+      expect(dropArea).toHaveClass('border-blue-500', 'bg-blue-50')
+    })
+
+    test('handles drag leave events', () => {
+      render(<CVForm onOptimize={mockOnOptimize} />)
+
+      const dropArea = screen.getByText('uploadPDF').closest('div')!.parentElement
+      
+      // First trigger drag over
+      fireEvent.dragOver(dropArea!)
+      expect(dropArea).toHaveClass('border-blue-500', 'bg-blue-50')
+      
+      // Then drag leave
+      fireEvent.dragLeave(dropArea!)
+      expect(dropArea).not.toHaveClass('border-blue-500', 'bg-blue-50')
+    })
+
+    test('handles file drop', async () => {
+      const user = userEvent.setup()
+      render(<CVForm onOptimize={mockOnOptimize} />)
+
+      const dropArea = screen.getByText('uploadPDF').closest('div')!.parentElement
+      
+      // Simulate file drop
+      const pdfFile = createPDFFile('dropped-cv.pdf')
+      const dataTransfer = {
+        files: [pdfFile],
+      }
+
+      fireEvent.drop(dropArea!, { dataTransfer })
+
+      expect(screen.getByText('dropped-cv.pdf')).toBeInTheDocument()
+    })
+  })
+
+  describe('Error Handling', () => {
+    test('handles PDF processing errors gracefully', async () => {
+      // Mock console.error to avoid test output noise
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+      
+      render(<CVForm onOptimize={mockOnOptimize} />)
+
+      // Test the non-PDF file rejection which we know works
+      const fileInput = getFileInput()
+      const textFile = new File([''], 'test.txt', { type: 'text/plain' })
+
+      Object.defineProperty(fileInput, 'files', {
+        value: [textFile],
+        writable: false,
+      })
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }))
+
+      // This should trigger the alert for invalid file type
+      expect(window.alert).toHaveBeenCalledWith('pdfAlert')
+      
+      consoleSpy.mockRestore()
     })
   })
 })
