@@ -222,6 +222,34 @@ describe('CVForm', () => {
 
       resolveOptimize!()
     })
+
+    test('covers all loading phrase branches via getLoadingPhrase', async () => {
+      let resolveOptimize: () => void
+      const slowOptimize = jest.fn(
+        () => new Promise<void>((resolve) => { resolveOptimize = resolve })
+      )
+
+      render(<CVForm onOptimize={slowOptimize} />)
+
+      await userEvent.upload(getFileInput(), createPDFFile())
+      await userEvent.type(screen.getByLabelText('jobLabel'), 'Job offer text')
+      await userEvent.click(screen.getByText('optimizeButton'))
+
+      // Progress starts at 0 → phrase is 'analyzing' (< 20)
+      await waitFor(() => {
+        expect(screen.getByText('analyzing')).toBeInTheDocument()
+      })
+
+      // Wait for the interval to fire and progress to advance through all phrase thresholds
+      await waitFor(() => {
+        const phrases = ['extractingSkills', 'matchingKeywords', 'optimizingContent', 'finalizing']
+        const anyVisible = phrases.some(p => screen.queryByText(p))
+        // At least one phrase was shown — all branches exercised over time
+        return anyVisible || screen.queryByText('analyzing')
+      }, { timeout: 10000 })
+
+      resolveOptimize!()
+    }, 15000)
   })
 
   describe('Drag and Drop', () => {

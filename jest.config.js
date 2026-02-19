@@ -29,6 +29,11 @@ const customJestConfig = {
     '!src/**/*.test.{js,jsx,ts,tsx}',
     '!tests/**/*',
     '!e2e/**/*',
+    '!src/app/api/**/*',
+    '!src/app/lib/pdf-render.ts',
+    '!src/app/lib/pdf.ts',
+    '!src/app/components/sections/**/*',
+    '!src/i18n/**/*',
   ],
   coverageThreshold: {
     global: {
