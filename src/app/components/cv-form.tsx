@@ -135,8 +135,28 @@ export default function CVForm({ onOptimize, error, onError }: CVFormProps) {
 				.trim();
 
 			// Add line breaks after periods (excluding URLs and emails)
-			const finalText = cleanedText
-				.replace(/([.?!])(?!\w*@|https?:\/\/|www\.)/g, '$1\n');
+			// First, temporarily replace URLs to protect them
+			let protectedText = cleanedText;
+			const urlPlaceholders: string[] = [];
+			let urlIndex = 0;
+			
+			// Protect URLs and emails
+			protectedText = protectedText.replace(/(?:https?:\/\/|www\.)[^\s]+|[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/g, (match) => {
+				const placeholder = `__URL_${urlIndex}__`;
+				urlPlaceholders.push(match);
+				urlIndex++;
+				return placeholder;
+			});
+			
+			// Add line breaks after periods
+			protectedText = protectedText.replace(/([.?!])\s*/g, '$1\n');
+			
+			// Restore URLs and emails
+			urlPlaceholders.forEach((url, index) => {
+				protectedText = protectedText.replace(`__URL_${index}__`, url);
+			});
+			
+			const finalText = protectedText;
 
 			return finalText;
 		} catch (error) {
