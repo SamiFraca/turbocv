@@ -4,6 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import * as pdfjsLib from 'pdfjs-dist';
 import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
+import { processPDFText } from '../utils/text-cleaning';
+import { 
+	processPDFFile as processPDFFileUtil,
+	handleFileUpload as handleFileUploadUtil,
+	handleDragOver as handleDragOverUtil,
+	handleDragLeave as handleDragLeaveUtil,
+	handleDrop as handleDropUtil
+} from '../utils/file-handling';
+import { extractTextFromPDF as extractTextFromPDFUtil } from '../utils/pdf-processing';
+import { getLoadingPhrase, createLoadingAnimation } from '../utils/loading';
 
 // Set up PDF.js worker for client-side with fallback
 if (typeof window !== 'undefined') {
@@ -32,146 +42,45 @@ export default function CVForm({ onOptimize, error, onError }: CVFormProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	// Loading phrases that change based on progress
-	const getLoadingPhrase = (progress: number) => {
-		if (progress < 20) return t("analyzing");
-		if (progress < 40) return t("extractingSkills");
-		if (progress < 60) return t("matchingKeywords");
-		if (progress < 80) return t("optimizingContent");
-		return t("finalizing");
-	};
+	const getLoadingPhraseForProgress = (progress: number) => getLoadingPhrase(progress, t);
 
 	// Animate loading progress from 0% to 99%
 	useEffect(() => {
+		let cleanup: (() => void) | null = null;
+		
 		if (isLoading) {
-			setLoadingProgress(0);
-			const interval = setInterval(() => {
-				setLoadingProgress((prev) => {
-					if (prev >= 99) return 99;
-					const increment = Math.random() * 15 + 5; 
-					const newProgress = prev + increment;
-					return newProgress >= 99 ? 99 : newProgress;
-				});
-			}, Math.random() * 1300 + 700); 
-
-			return () => clearInterval(interval);
+			cleanup = createLoadingAnimation(setLoadingProgress);
 		} else {
 			setLoadingProgress(0);
 		}
+		
+		return () => {
+			if (cleanup) cleanup();
+		};
 	}, [isLoading]);
 
 	const processPDFFile = async (file: File) => {
-		if (file.type !== "application/pdf") {
-			alert(t("pdfAlert"));
-			return;
-		}
-
-		try {
-			setPdfFile(file);
-			setCvFileName(file.name);
-		} catch (error) {
-			console.error("Error processing PDF:", error);
-			alert(t("pdfError"));
-		}
+		await processPDFFileUtil(file, setPdfFile, setCvFileName, t);
 	};
 
 	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const file = e.target.files?.[0];
-		if (!file) return;
-		await processPDFFile(file);
+		await handleFileUploadUtil(e, processPDFFile);
 	};
 
 	const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-		setIsDragging(true);
+		handleDragOverUtil(e, setIsDragging);
 	};
 
 	const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-		setIsDragging(false);
+		handleDragLeaveUtil(e, setIsDragging);
 	};
 
 	const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
-		setIsDragging(false);
-
-		const file = e.dataTransfer.files?.[0];
-		if (!file) return;
-		await processPDFFile(file);
+		await handleDropUtil(e, setIsDragging, processPDFFile);
 	};
 
 	const extractTextFromPDF = async (file: File): Promise<string> => {
-		let pdf: pdfjsLib.PDFDocumentProxy | null = null;
-		try {
-			const arrayBuffer = await file.arrayBuffer();
-			pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-			const textParts: string[] = [];
-
-			for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-				const page = await pdf.getPage(pageNum);
-				const textContent = await page.getTextContent();
-				const pageText = textContent.items
-					.filter((item): item is TextItem => 'str' in item)
-					.map((item: TextItem) => item.str || '')
-					.join(' ');
-				textParts.push(pageText);
-			}
-
-			// Clean up the extracted text with optimized regex
-			const rawText = textParts.join('\n\n');
-			const cleanedText = rawText
-				// Combined text cleaning operations for better performance
-				.replace(/https\s*:\s*\/\s*/g, 'https://')
-				.replace(/www\s*\.\s*/g, 'www.')
-				.replace(/\s+@\s+/g, '@')
-				.replace(/([a-zA-Z])\s+([áéíóúÁÉÍÓÚñÑ])/g, '$1$2')
-				.replace(/([áéíóúÁÉÍÓÚñÑ])\s+([a-zA-Z])/g, '$1$2')
-				.replace(/([a-zA-ZáéíóúÁÉÍÓÚñÑ])\s+([.,;:!?])/g, '$1$2')
-				.replace(/([.,;:!?])\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ])/g, '$1$2')
-				.replace(/([a-z])([A-Z])/g, '$1 $2')
-				.replace(/https\s*:\s*\/\s*\/\s*/g, 'https://')
-				.replace(/\s*-\s*/g, '-')
-				.replace(/\s{2,}/g, ' ')
-				.replace(/\n\s*\n/g, '\n')
-				.trim();
-
-			// Add line breaks after periods (excluding URLs and emails)
-			// First, temporarily replace URLs to protect them
-			let protectedText = cleanedText;
-			const urlPlaceholders: string[] = [];
-			let urlIndex = 0;
-			
-			// Protect URLs and emails
-			protectedText = protectedText.replace(/(?:https?:\/\/|www\.)[^\s]+|[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}/g, (match) => {
-				const placeholder = `__URL_${urlIndex}__`;
-				urlPlaceholders.push(match);
-				urlIndex++;
-				return placeholder;
-			});
-			
-			// Add line breaks after periods
-			protectedText = protectedText.replace(/([.?!])\s*/g, '$1\n');
-			
-			// Restore URLs and emails
-			urlPlaceholders.forEach((url, index) => {
-				protectedText = protectedText.replace(`__URL_${index}__`, url);
-			});
-			
-			const finalText = protectedText;
-
-			return finalText;
-		} catch (error) {
-			console.error('Failed to extract PDF text:', error);
-			throw new Error('Failed to extract text from PDF. Please ensure the file is a valid PDF document.');
-		} finally {
-			// Clean up PDF document to prevent memory leaks
-			if (pdf) {
-				try {
-					await pdf.destroy();
-				} catch (cleanupError) {
-					console.warn('Failed to cleanup PDF document:', cleanupError);
-				}
-			}
-		}
+		return await extractTextFromPDFUtil(file);
 	};
 
 	const handleSubmit = async () => {
@@ -290,7 +199,7 @@ export default function CVForm({ onOptimize, error, onError }: CVFormProps) {
 							/>
 						</div>
 						<p className="text-center text-slate-600 text-sm font-medium">
-							{getLoadingPhrase(loadingProgress)}
+							{getLoadingPhraseForProgress(loadingProgress)}
 						</p>
 					</div>
 				) : (
