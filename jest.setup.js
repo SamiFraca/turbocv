@@ -73,6 +73,27 @@ jest.mock('pdf-parse', () => ({
   })),
 }))
 
+// Mock PDF.js
+jest.mock('pdfjs-dist', () => ({
+  getDocument: jest.fn().mockImplementation(() => ({
+    promise: Promise.resolve({
+      numPages: 1,
+      getPage: jest.fn().mockImplementation(() => Promise.resolve({
+        getTextContent: jest.fn().mockResolvedValue({
+          items: [
+            { str: 'Mock PDF text content' },
+            { str: 'for testing purposes' }
+          ]
+        })
+      })),
+      destroy: jest.fn().mockResolvedValue(undefined)
+    })
+  })),
+  GlobalWorkerOptions: {
+    workerSrc: ''
+  }
+}))
+
 // Global test utilities
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),

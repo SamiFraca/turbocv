@@ -3,6 +3,11 @@ import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import CVForm from '../cv-form'
 
+// Mock the PDF processing utility
+jest.mock('../../utils/pdf-processing', () => ({
+  extractTextFromPDF: jest.fn().mockResolvedValue('Mock extracted PDF text')
+}))
+
 const createPDFFile = (name = 'test-cv.pdf') =>
   new File(['pdf content'], name, { type: 'application/pdf' })
 
@@ -14,6 +19,7 @@ const getFileInput = () =>
 
 describe('CVForm', () => {
   const mockOnOptimize = jest.fn().mockResolvedValue(undefined)
+  const mockOnError = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
@@ -22,7 +28,7 @@ describe('CVForm', () => {
 
   describe('Rendering', () => {
     test('renders form with all elements', () => {
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       expect(screen.getByText('cvLabel')).toBeInTheDocument()
       expect(screen.getByText('uploadPDF')).toBeInTheDocument()
@@ -32,7 +38,7 @@ describe('CVForm', () => {
     })
 
     test('renders feature cards', () => {
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       expect(screen.getByText('features.atsOptimized')).toBeInTheDocument()
       expect(screen.getByText('features.immediateResult')).toBeInTheDocument()
@@ -40,7 +46,7 @@ describe('CVForm', () => {
     })
 
     test('renders error message when error prop is provided', () => {
-      render(<CVForm onOptimize={mockOnOptimize} error="Something went wrong" />)
+      render(<CVForm onOptimize={mockOnOptimize} error="Something went wrong" onError={mockOnError} />)
 
       const alert = screen.getByRole('alert')
       expect(alert).toBeInTheDocument()
@@ -48,7 +54,7 @@ describe('CVForm', () => {
     })
 
     test('does not render error when error prop is null', () => {
-      render(<CVForm onOptimize={mockOnOptimize} error={null} />)
+      render(<CVForm onOptimize={mockOnOptimize} error={null} onError={mockOnError} />)
 
       expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     })
@@ -57,7 +63,7 @@ describe('CVForm', () => {
   describe('File Upload', () => {
     test('accepts PDF file via file input', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile('my-resume.pdf'))
 
@@ -65,7 +71,7 @@ describe('CVForm', () => {
     })
 
     test('rejects non-PDF files', async () => {
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       // Simulate the processPDFFile logic directly via fireEvent
       // since userEvent.upload respects the accept attribute
@@ -84,7 +90,7 @@ describe('CVForm', () => {
 
     test('shows remove button after file upload', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile())
 
@@ -93,7 +99,7 @@ describe('CVForm', () => {
 
     test('removes uploaded file when remove button is clicked', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile('my-resume.pdf'))
       expect(screen.getByText('my-resume.pdf')).toBeInTheDocument()
@@ -108,7 +114,7 @@ describe('CVForm', () => {
   describe('Job Offer Input', () => {
     test('allows typing in job offer textarea', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       const textarea = screen.getByLabelText('jobLabel')
       await user.type(textarea, 'Senior React Developer')
@@ -119,14 +125,14 @@ describe('CVForm', () => {
 
   describe('Submit Button', () => {
     test('is disabled when no file is uploaded', () => {
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       expect(screen.getByText('optimizeButton')).toBeDisabled()
     })
 
     test('is disabled when no job offer is provided', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile())
 
@@ -135,7 +141,7 @@ describe('CVForm', () => {
 
     test('is disabled when job offer is only whitespace', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile())
 
@@ -147,7 +153,7 @@ describe('CVForm', () => {
 
     test('is enabled when both file and job offer are provided', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile())
 
@@ -157,9 +163,9 @@ describe('CVForm', () => {
       expect(screen.getByText('optimizeButton')).toBeEnabled()
     })
 
-    test('calls onOptimize with file and job offer on click', async () => {
+    test('calls onOptimize with file, job offer and extracted text on click', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile())
 
@@ -171,7 +177,8 @@ describe('CVForm', () => {
       expect(mockOnOptimize).toHaveBeenCalledTimes(1)
       expect(mockOnOptimize).toHaveBeenCalledWith(
         expect.any(File),
-        'Senior React Developer'
+        'Senior React Developer',
+        expect.any(String) // extracted text
       )
     })
   })
@@ -184,7 +191,7 @@ describe('CVForm', () => {
       )
 
       const user = userEvent.setup()
-      render(<CVForm onOptimize={slowOptimize} />)
+      render(<CVForm onOptimize={slowOptimize} onError={mockOnError} />)
 
       await user.upload(getFileInput(), createPDFFile())
 
@@ -209,7 +216,7 @@ describe('CVForm', () => {
         () => new Promise<void>((resolve) => { resolveOptimize = resolve })
       )
 
-      render(<CVForm onOptimize={slowOptimize} />)
+      render(<CVForm onOptimize={slowOptimize} onError={mockOnError} />)
 
       await userEvent.upload(getFileInput(), createPDFFile())
       await userEvent.type(screen.getByLabelText('jobLabel'), 'Job offer text')
@@ -229,7 +236,7 @@ describe('CVForm', () => {
         () => new Promise<void>((resolve) => { resolveOptimize = resolve })
       )
 
-      render(<CVForm onOptimize={slowOptimize} />)
+      render(<CVForm onOptimize={slowOptimize} onError={mockOnError} />)
 
       await userEvent.upload(getFileInput(), createPDFFile())
       await userEvent.type(screen.getByLabelText('jobLabel'), 'Job offer text')
@@ -254,7 +261,7 @@ describe('CVForm', () => {
 
   describe('Drag and Drop', () => {
     test('handles drag over events', () => {
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       const dropArea = screen.getByText('uploadPDF').closest('div')!.parentElement
       
@@ -266,7 +273,7 @@ describe('CVForm', () => {
     })
 
     test('handles drag leave events', () => {
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       const dropArea = screen.getByText('uploadPDF').closest('div')!.parentElement
       
@@ -281,7 +288,7 @@ describe('CVForm', () => {
 
     test('handles file drop', async () => {
       const user = userEvent.setup()
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       const dropArea = screen.getByText('uploadPDF').closest('div')!.parentElement
       
@@ -302,7 +309,7 @@ describe('CVForm', () => {
       // Mock console.error to avoid test output noise
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
       
-      render(<CVForm onOptimize={mockOnOptimize} />)
+      render(<CVForm onOptimize={mockOnOptimize} onError={mockOnError} />)
 
       // Test the non-PDF file rejection which we know works
       const fileInput = getFileInput()

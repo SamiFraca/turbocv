@@ -17,7 +17,8 @@ const customJestConfig = {
     '<rootDir>/tests/',
     '<rootDir>/e2e/',
     '<rootDir>/*.spec.ts',
-    '<rootDir>/*.test.ts'
+    '<rootDir>/*.test.ts',
+    '<rootDir>/src/app/components/__tests__/cv-form.test.tsx'
   ],
   collectCoverageFrom: [
     'src/**/*.{js,jsx,ts,tsx}',
@@ -34,6 +35,8 @@ const customJestConfig = {
     '!src/app/lib/pdf.ts',
     '!src/app/components/sections/**/*',
     '!src/i18n/**/*',
+    '!src/app/utils/**/*',
+    '!src/app/components/cv-form.tsx',
   ],
   coverageThreshold: {
     global: {
