@@ -2,13 +2,26 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import * as pdfjsLib from 'pdfjs-dist';
+import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
 
-interface CVFormProps {
-	onOptimize: (pdfFile: File, jobOffer: string) => Promise<void>;
-	error?: string | null;
+// Set up PDF.js worker for client-side with fallback
+if (typeof window !== 'undefined') {
+	try {
+		pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+	} catch (error) {
+		console.warn('Failed to load PDF.js worker from CDN, using local fallback');
+		pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
+	}
 }
 
-export default function CVForm({ onOptimize, error }: CVFormProps) {
+interface CVFormProps {
+	onOptimize: (pdfFile: File, jobOffer: string, originalText: string) => Promise<void>;
+	error?: string | null;
+	onError?: (error: string) => void;
+}
+
+export default function CVForm({ onOptimize, error, onError }: CVFormProps) {
 	const t = useTranslations("cvForm");
 	const [pdfFile, setPdfFile] = useState<File | null>(null);
 	const [cvFileName, setCvFileName] = useState("");
@@ -86,12 +99,85 @@ export default function CVForm({ onOptimize, error }: CVFormProps) {
 		await processPDFFile(file);
 	};
 
+	const extractTextFromPDF = async (file: File): Promise<string> => {
+		let pdf: pdfjsLib.PDFDocumentProxy | null = null;
+		try {
+			const arrayBuffer = await file.arrayBuffer();
+			pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+			const textParts: string[] = [];
+
+			for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+				const page = await pdf.getPage(pageNum);
+				const textContent = await page.getTextContent();
+				const pageText = textContent.items
+					.filter((item): item is TextItem => 'str' in item)
+					.map((item: TextItem) => item.str || '')
+					.join(' ');
+				textParts.push(pageText);
+			}
+
+			// Clean up the extracted text with optimized regex
+			const rawText = textParts.join('\n\n');
+			const cleanedText = rawText
+				// Combined text cleaning operations for better performance
+				.replace(/https\s*:\s*\/\s*/g, 'https://')
+				.replace(/www\s*\.\s*/g, 'www.')
+				.replace(/\s+@\s+/g, '@')
+				.replace(/([a-zA-Z])\s+([áéíóúÁÉÍÓÚñÑ])/g, '$1$2')
+				.replace(/([áéíóúÁÉÍÓÚñÑ])\s+([a-zA-Z])/g, '$1$2')
+				.replace(/([a-zA-ZáéíóúÁÉÍÓÚñÑ])\s+([.,;:!?])/g, '$1$2')
+				.replace(/([.,;:!?])\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ])/g, '$1$2')
+				.replace(/([a-z])([A-Z])/g, '$1 $2')
+				.replace(/https\s*:\s*\/\s*\/\s*/g, 'https://')
+				.replace(/\s*-\s*/g, '-')
+				.replace(/\s{2,}/g, ' ')
+				.replace(/\n\s*\n/g, '\n')
+				.trim();
+
+			// Add line breaks after periods (excluding URLs and emails)
+			const finalText = cleanedText
+				.replace(/([.?!])(?!\w*@|https?:\/\/|www\.)/g, '$1\n');
+
+			return finalText;
+		} catch (error) {
+			console.error('Failed to extract PDF text:', error);
+			throw new Error('Failed to extract text from PDF. Please ensure the file is a valid PDF document.');
+		} finally {
+			// Clean up PDF document to prevent memory leaks
+			if (pdf) {
+				try {
+					await pdf.destroy();
+				} catch (cleanupError) {
+					console.warn('Failed to cleanup PDF document:', cleanupError);
+				}
+			}
+		}
+	};
+
 	const handleSubmit = async () => {
 		if (!pdfFile || !jobOffer.trim()) return;
 
 		setIsLoading(true);
-		await onOptimize(pdfFile, jobOffer);
-		setIsLoading(false);
+		
+		try {
+			// Extract text from PDF on client-side
+			const originalText = await extractTextFromPDF(pdfFile);
+			
+			// Validate extracted text
+			if (!originalText.trim()) {
+				throw new Error('Unable to extract text from the PDF. Please ensure the PDF contains readable text.');
+			}
+			
+			await onOptimize(pdfFile, jobOffer, originalText);
+		} catch (error) {
+			console.error('Failed to process PDF:', error);
+			const errorMessage = error instanceof Error ? error.message : 'Failed to process PDF';
+			if (onError) {
+				onError(errorMessage);
+			}
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
 	return (

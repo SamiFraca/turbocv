@@ -28,12 +28,13 @@ export default function HomePage() {
 		formRef.current?.scrollIntoView({ behavior: "smooth" });
 	};
 
-	const handleOptimize = async (pdfFile: File, jobOffer: string) => {
+	const handleOptimize = async (pdfFile: File, jobOffer: string, originalText: string) => {
 		try {
 			setError(null);
 			const formData = new FormData();
 			formData.append("pdf", pdfFile);
 			formData.append("jobOffer", jobOffer);
+			formData.append("originalText", originalText);
 			formData.append("locale", locale);
 			
 			const response = await fetch("/api/optimize", {
@@ -50,7 +51,8 @@ export default function HomePage() {
 			setResult(data);
 		} catch (err) {
 			console.error("Error:", err);
-			setError(t("error"));
+			const errorMessage = err instanceof Error ? err.message : t("error");
+			setError(errorMessage);
 		}
 	};
 
@@ -74,7 +76,7 @@ export default function HomePage() {
 
 			<div ref={formRef} className="max-w-4xl mx-auto px-4 py-12">
 				{!result ? (
-					<CVForm onOptimize={handleOptimize} error={error} />
+					<CVForm onOptimize={handleOptimize} error={error} onError={setError} />
 				) : (
 					<ResultView result={result} onReset={handleReset} />
 				)}

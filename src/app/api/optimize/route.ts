@@ -2,7 +2,14 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { PDFDocument, rgb } from "pdf-lib";
-import { PDFParse } from "pdf-parse";
+
+// PDF layout configuration
+const PDF_CONFIG = {
+	fontSize: 9,
+	margin: 15,
+	lineHeight: 11,
+	maxOriginalTextLength: 50000, // Maximum characters for original text
+} as const;
 
 async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: string): Promise<string> {
 	try {
@@ -20,10 +27,10 @@ async function modifyPDFWithOptimizedText(pdfBuffer: Buffer, optimizedText: stri
 		
 		// Strategy: Create a semi-transparent white rectangle to cover text areas,
 		// then write optimized text on top. This preserves images and styling underneath.
-		const fontSize = 9;
-		const margin = 15;
+		const fontSize = PDF_CONFIG.fontSize;
+		const margin = PDF_CONFIG.margin;
 		const maxWidth = width - 2 * margin;
-		const lineHeight = 11;
+		const lineHeight = PDF_CONFIG.lineHeight;
 		
 		let yPosition = height - margin;
 		const lines = optimizedText.split('\n');
@@ -99,11 +106,20 @@ export async function POST(req: NextRequest) {
 		console.log("=== API Request Started ===");
 		
 		const formData = await req.formData();
-		console.log("FormData keys:", Array.from(formData.keys()));
 		
 		const pdfFile = formData.get("pdf") as File;
 		const jobOffer = formData.get("jobOffer") as string;
+		const originalText = formData.get("originalText") as string || '';
 		const locale = formData.get("locale") as string || "en";
+		
+		// Validate original text length
+		if (originalText.length > PDF_CONFIG.maxOriginalTextLength) {
+			const tError = await getTranslations({ locale, namespace: "api.errors" });
+			return NextResponse.json(
+				{ error: tError("textTooLong"), maxLength: PDF_CONFIG.maxOriginalTextLength },
+				{ status: 400 }
+			);
+		}
 		
 		console.log("PDF file present:", !!pdfFile);
 		console.log("PDF file name:", pdfFile?.name);
@@ -114,9 +130,6 @@ export async function POST(req: NextRequest) {
 		console.log("locale:", locale);
 
 		if (!pdfFile || !jobOffer) {
-			console.log("=== Validation Failed ===");
-			console.log("Missing PDF file:", !pdfFile);
-			console.log("Missing jobOffer:", !jobOffer);
 			const t = await getTranslations({ locale, namespace: "api.errors" });
 			return NextResponse.json(
 				{ 
@@ -154,7 +167,6 @@ export async function POST(req: NextRequest) {
 		uploadFormData.append("file", pdfFile);
 		uploadFormData.append("purpose", "assistants");
 		
-		console.log("Uploading file...");
 		const uploadResponse = await fetch("https://api.openai.com/v1/files", {
 			method: "POST",
 			headers: {
@@ -165,16 +177,11 @@ export async function POST(req: NextRequest) {
 		
 		if (!uploadResponse.ok) {
 			const uploadError = await uploadResponse.json();
-			console.error("File upload error:", uploadError);
 			throw new Error(`File upload failed: ${JSON.stringify(uploadError)}`);
 		}
 		
 		const uploadResult = await uploadResponse.json();
 		console.log("File uploaded successfully:", uploadResult.id);
-		
-		console.log("=== Calling OpenAI Responses API ===");
-		console.log("Model: gpt-4o-mini");
-		console.log("File ID:", uploadResult.id);
 
 		const prompt = `${jobOffer}
 
@@ -247,27 +254,27 @@ Return ONLY this exact JSON structure:
 
 Remember: Profile must be 2-3 structured paragraphs that naturally integrate key skills from both the CV and job offer.`;
 
+		console.log("=== Calling OpenAI Responses API ===");
+		
 		const requestBody = {
 			model: "gpt-4o-mini",
 			input: [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_file",
-                        "file_id": uploadResult.id
-                    },
-                    {
-                        "type": "input_text",
-                        "text": prompt
-                    }
-                ]
-            }
+				{
+					"role": "user",
+					"content": [
+						{
+							"type": "input_file",
+							"file_id": uploadResult.id
+						},
+						{
+							"type": "input_text",
+							"text": prompt
+						}
+					]
+				}
 			],
 		};
-		
-		console.log("Request body size:", JSON.stringify(requestBody).length);
-		
+
 		const response = await fetch("https://api.openai.com/v1/responses", {
 			method: "POST",
 			headers: {
@@ -277,30 +284,18 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			body: JSON.stringify(requestBody),
 		});
 
-		console.log("OpenAI Response Status:", response.status);
-		console.log("OpenAI Response Headers:", Object.fromEntries(response.headers.entries()));
-
 		if (!response.ok) {
 			const errorData = await response.json();
 			console.error("=== OpenAI API Error ===");
 			console.error("Status:", response.status);
-			console.error("Status Text:", response.statusText);
 			console.error("Error Data:", JSON.stringify(errorData, null, 2));
 			throw new Error(`OpenAI API Error: ${JSON.stringify(errorData)}`);
 		}
 		
 		console.log("=== OpenAI API Success ===");
-
 		console.log("=== Parsing OpenAI Response ===");
-		const data = await response.json();
-		console.log("Full OpenAI response:", JSON.stringify(data, null, 2));
 		
-		// Debug: log all output items
-		if (data.output) {
-			data.output.forEach((item: any, idx: number) => {
-				console.log(`Output[${idx}]:`, JSON.stringify(item, null, 2));
-			});
-		}
+		const data = await response.json();
 		
 		// The Responses API returns content in output[].content[].text
 		// Find the first output with actual text content
@@ -317,11 +312,10 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 		
 		if (!content) {
 			console.error("Invalid OpenAI response structure - no content found");
-			console.error("Output structure:", JSON.stringify(data.output, null, 2));
 			throw new Error("Invalid response from OpenAI API");
 		}
 		
-		console.log("Raw content from OpenAI:", content);
+		console.log("Raw content extracted from OpenAI");
 		
 		// Extract JSON from markdown code blocks if present
 		let jsonString = content;
@@ -330,9 +324,8 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			jsonString = jsonMatch[1];
 			console.log("Extracted JSON from markdown code block");
 		}
-		
+
 		const result = JSON.parse(jsonString);
-		console.log("Parsed result keys:", Object.keys(result));
 
 		// Build structured CV data
 		const cvData = {
@@ -348,6 +341,38 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			tools: result.tools || [],
 			languages: result.languages || [],
 		};
+
+		const keywords = result.keywords || cvData.skills || [];
+
+		console.log("=== Cleaning up uploaded file ===");
+		// Implement retry mechanism for file cleanup
+		let cleanupAttempts = 0;
+		const maxCleanupAttempts = 3;
+		while (cleanupAttempts < maxCleanupAttempts) {
+			try {
+				await fetch(`https://api.openai.com/v1/files/${uploadResult.id}`, {
+					method: "DELETE",
+					headers: {
+						Authorization: `Bearer ${openaiKey}`,
+					},
+				});
+				console.log("File deleted successfully");
+				break;
+			} catch (cleanupError) {
+				cleanupAttempts++;
+				if (cleanupAttempts >= maxCleanupAttempts) {
+					console.warn(`Failed to delete file after ${maxCleanupAttempts} attempts:`, cleanupError);
+					// Could add to a cleanup queue here for later retry
+				} else {
+					console.warn(`Cleanup attempt ${cleanupAttempts} failed, retrying...`);
+					await new Promise(resolve => setTimeout(resolve, 1000 * cleanupAttempts)); // Exponential backoff
+				}
+			}
+		}
+
+		console.log("=== Modifying original PDF with optimized CV ===");
+		// Original text will be extracted client-side and sent with the request
+		const pdfBuffer = await pdfFile.arrayBuffer();
 
 		// Build flat text for the PDF overlay (backward compat)
 		const flatCV = [
@@ -365,35 +390,7 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			...cvData.education.map((edu: { degree: string; school: string; dates: string }) => `${edu.degree} - ${edu.school} (${edu.dates})`),
 		].join('\n');
 
-		const keywords = result.keywords || cvData.skills || [];
-
-		console.log("=== Cleaning up uploaded file ===");
-		try {
-			await fetch(`https://api.openai.com/v1/files/${uploadResult.id}`, {
-				method: "DELETE",
-				headers: {
-					Authorization: `Bearer ${openaiKey}`,
-				},
-			});
-			console.log("File deleted successfully");
-		} catch (cleanupError) {
-			console.warn("Failed to delete file:", cleanupError);
-		}
-
-		console.log("=== Extracting original PDF text ===");
-		const pdfBuffer = await pdfFile.arrayBuffer();
-		let originalText = '';
-		try {
-			const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
-			const textResult = await parser.getText();
-			originalText = textResult.text || '';
-		} catch (parseErr) {
-			console.warn("Failed to extract original PDF text:", parseErr);
-		}
-
-		console.log("=== Modifying original PDF with optimized CV ===");
 		const pdfBase64 = await modifyPDFWithOptimizedText(Buffer.from(pdfBuffer), flatCV);
-		console.log("PDF modified, base64 length:", pdfBase64.length);
 
 		return NextResponse.json({
 			optimizedCV: flatCV,
@@ -406,7 +403,6 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 		console.error("=== API Request Failed ===");
 		console.error("Error type:", error instanceof Error ? error.constructor.name : 'Unknown');
 		console.error("Error message:", error instanceof Error ? error.message : String(error));
-		console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
 		const errorMsg = error instanceof Error ? error.message : String(error);
 		return NextResponse.json(
 			{ 
