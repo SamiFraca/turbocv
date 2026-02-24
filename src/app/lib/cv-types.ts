@@ -28,9 +28,11 @@ export interface StructuredCV {
 	skills: string[];
 	tools?: string[];
 	languages?: string[];
+	language?: string;
 }
 
 export interface TemplateProps {
 	cv: StructuredCV;
 	keywords: string[];
+	language?: string;
 }

@@ -2,6 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { PDFDocument, rgb } from "pdf-lib";
+import { generateCVOptimizationPrompt } from "@/app/utils/prompts";
+import { detectCVLanguage } from "@/app/utils/language-detection";
 
 // PDF layout configuration
 const PDF_CONFIG = {
@@ -149,8 +151,6 @@ export async function POST(req: NextRequest) {
 		
 		console.log("=== Validation Passed ===");
 
-		const tPrompt = await getTranslations({ locale, namespace: "api.prompt" });
-
 		const openaiKey = process.env.OPENAI_API_KEY;
 		if (!openaiKey) {
 			const tError = await getTranslations({ locale, namespace: "api.errors" });	
@@ -183,76 +183,15 @@ export async function POST(req: NextRequest) {
 		const uploadResult = await uploadResponse.json();
 		console.log("File uploaded successfully:", uploadResult.id);
 
-		const prompt = `${jobOffer}
+		// Detect the language of the original CV
+		const detectedLanguage = detectCVLanguage(originalText);
+		console.log("Detected CV language:", detectedLanguage);
 
-You are a senior CV strategist and talent acquisition expert. Your task is to optimize the attached CV for this specific job offer.
-
-## CRITICAL REQUIREMENTS
-
-### Profile Section (2-3 structured paragraphs):
-- Paragraph 1: Professional identity (years experience + core specialization)
-- Paragraph 2: Key achievements directly relevant to the job offer
-- Paragraph 3: Value proposition with 2-3 most relevant skills from the job requirements
-- Use professional, confident tone without generic adjectives
-- Mirror terminology from the job offer where authentic
-
-### Content Rules:
-- Extract and integrate keywords naturally from the job offer
-- Quantify achievements with metrics (%, €, time, scale, team size)
-- Maintain 100% factual accuracy - no exaggeration or fabrication
-- Use reverse chronological order
-- Write in the SAME language as the original CV
-- Keep descriptions impact-focused and evidence-based
-
-### Skills Alignment:
-- Prioritize skills that appear in BOTH the CV and job offer
-- Group skills logically (technical, soft, domain-specific)
-- Include proficiency levels when evident from experience
-
-## JSON OUTPUT STRUCTURE
-Return ONLY this exact JSON structure:
-
-{
-  "name": "Full name from CV",
-  "title": "Professional title aligned with job offer",
-  "contact": {
-    "email": "email",
-    "phone": "phone", 
-    "location": "city/location",
-    "links": {
-      "linkedin": "URL or N/A",
-      "github": "URL or N/A",
-      "portfolio": "URL or N/A"
-    }
-  },
-  "profile": "2-3 structured paragraphs: 1) Professional identity, 2) Relevant achievements, 3) Value proposition with aligned skills",
-  "key_accomplishments": [
-    "Quantified achievement directly relevant to the role",
-    "Second quantified achievement with specific metrics"
-  ],
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name", 
-      "dates": "Start - End",
-      "description": "Achievement-focused description with metrics, tools, and business impact"
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree name",
-      "school": "School name",
-      "dates": "Year"
-    }
-  ],
-  "certifications": ["Certification 1"],
-  "skills": ["Skill1", "Skill2"],
-  "tools": ["Tool1", "Tool2"],
-  "languages": ["Language – Level"],
-  "keywords": ["keyword1", "keyword2"]
-}
-
-Remember: Profile must be 2-3 structured paragraphs that naturally integrate key skills from both the CV and job offer.`;
+		const prompt = generateCVOptimizationPrompt({
+			jobOffer,
+			cvText: originalText,
+			detectedLanguage
+		});
 
 		console.log("=== Calling OpenAI Responses API ===");
 		
@@ -340,6 +279,7 @@ Remember: Profile must be 2-3 structured paragraphs that naturally integrate key
 			skills: result.skills || [],
 			tools: result.tools || [],
 			languages: result.languages || [],
+			language: detectedLanguage,
 		};
 
 		const keywords = result.keywords || cvData.skills || [];
