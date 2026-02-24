@@ -1,6 +1,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { TemplateProps } from '../cv-types';
+import { getTemplateHeadings, type SupportedLanguage } from '@/app/utils/language-detection';
 
 const styles = StyleSheet.create({
 	page: {
@@ -88,7 +89,9 @@ const styles = StyleSheet.create({
 	},
 });
 
-export function MinimalTemplate({ cv, keywords }: TemplateProps) {
+export function MinimalTemplate({ cv, keywords, language }: TemplateProps) {
+	const lang = (language || cv.language || 'en') as SupportedLanguage;
+	const headings = getTemplateHeadings(lang);
 	const contactLine = [cv.contact.email, cv.contact.phone, cv.contact.location]
 		.filter(Boolean)
 		.join('  |  ');
@@ -104,7 +107,7 @@ export function MinimalTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.profile && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>SUMMARY</Text>
+						<Text style={styles.sectionTitle}>{headings.professionalSummary}</Text>
 						<Text style={{ fontSize: 8, color: '#333333', lineHeight: 1.5 }}>
 							{cv.profile}
 						</Text>
@@ -113,7 +116,7 @@ export function MinimalTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.key_accomplishments && cv.key_accomplishments.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>KEY ACCOMPLISHMENTS</Text>
+						<Text style={styles.sectionTitle}>{headings.keyAccomplishments}</Text>
 						{cv.key_accomplishments.map((acc, idx) => (
 							<Text key={idx} style={{ fontSize: 8, color: '#333333', marginBottom: 3, lineHeight: 1.3 }}>
 								• {acc}
@@ -124,7 +127,7 @@ export function MinimalTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.experience.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>EXPERIENCE</Text>
+						<Text style={styles.sectionTitle}>{headings.experience}</Text>
 						{cv.experience.map((job, idx) => (
 							<View key={idx} style={{ marginBottom: 8 }}>
 								<View style={styles.jobHeader}>
@@ -140,7 +143,7 @@ export function MinimalTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.education.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>EDUCATION</Text>
+						<Text style={styles.sectionTitle}>{headings.education}</Text>
 						{cv.education.map((edu, idx) => (
 							<View key={idx} style={styles.educationItem}>
 								<Text style={styles.degreeTitle}>{edu.degree}</Text>
@@ -153,7 +156,7 @@ export function MinimalTemplate({ cv, keywords }: TemplateProps) {
 
 				{keywords.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>SKILLS</Text>
+						<Text style={styles.sectionTitle}>{headings.skills}</Text>
 						<View style={styles.skillsContainer}>
 							{keywords.map((keyword, idx) => (
 								<Text key={idx} style={styles.skillTag}>
@@ -179,7 +182,7 @@ export function MinimalTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.languages && cv.languages.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>LANGUAGES</Text>
+						<Text style={styles.sectionTitle}>{headings.languages}</Text>
 						{cv.languages.map((lang, idx) => (
 							<Text key={idx} style={{ fontSize: 8, color: '#333333', marginBottom: 2 }}>
 								{lang}

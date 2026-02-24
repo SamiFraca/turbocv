@@ -1,6 +1,7 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import type { TemplateProps } from '../cv-types';
+import { getTemplateHeadings, type SupportedLanguage } from '@/app/utils/language-detection';
 
 const styles = StyleSheet.create({
 	page: {
@@ -89,7 +90,9 @@ const styles = StyleSheet.create({
 	},
 });
 
-export function ClassicTemplate({ cv, keywords }: TemplateProps) {
+export function ClassicTemplate({ cv, keywords, language }: TemplateProps) {
+	const lang = (language || cv.language || 'en') as SupportedLanguage;
+	const headings = getTemplateHeadings(lang);
 	const contactLine = [cv.contact.email, cv.contact.phone, cv.contact.location]
 		.filter(Boolean)
 		.join('  |  ');
@@ -105,7 +108,7 @@ export function ClassicTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.profile && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>Professional Summary</Text>
+						<Text style={styles.sectionTitle}>{headings.professionalSummary}</Text>
 						<Text style={{ fontSize: 9, color: '#333333', lineHeight: 1.5 }}>
 							{cv.profile}
 						</Text>
@@ -125,7 +128,7 @@ export function ClassicTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.experience.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>Professional Experience</Text>
+						<Text style={styles.sectionTitle}>{headings.experience}</Text>
 						{cv.experience.map((job, idx) => (
 							<View key={idx} style={{ marginBottom: 10 }}>
 								<View style={styles.jobHeader}>
@@ -141,7 +144,7 @@ export function ClassicTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.education.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>Education</Text>
+						<Text style={styles.sectionTitle}>{headings.education}</Text>
 						{cv.education.map((edu, idx) => (
 							<View key={idx} style={styles.educationItem}>
 								<Text style={styles.degreeTitle}>{edu.degree}</Text>
@@ -154,7 +157,7 @@ export function ClassicTemplate({ cv, keywords }: TemplateProps) {
 
 				{keywords.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>Key Skills</Text>
+						<Text style={styles.sectionTitle}>{headings.skills}</Text>
 						<Text style={styles.skillsList}>
 							{keywords.join(' • ')}
 						</Text>
@@ -163,7 +166,7 @@ export function ClassicTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.tools && cv.tools.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>Tools & Technologies</Text>
+						<Text style={styles.sectionTitle}>{headings.toolsTechnologies}</Text>
 						<Text style={styles.skillsList}>
 							{cv.tools.join(' • ')}
 						</Text>
@@ -172,7 +175,7 @@ export function ClassicTemplate({ cv, keywords }: TemplateProps) {
 
 				{cv.languages && cv.languages.length > 0 && (
 					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>Languages</Text>
+						<Text style={styles.sectionTitle}>{headings.languages}</Text>
 						{cv.languages.map((lang, idx) => (
 							<Text key={idx} style={{ fontSize: 9, color: '#333333', marginBottom: 2 }}>
 								{lang}
