@@ -16,6 +16,11 @@ export async function extractTextFromPDF(file: File): Promise<string> {
 		throw new Error('PDF processing is only available in the browser environment');
 	}
 
+	// Use mock if available (for testing)
+	if (typeof (window as any).__mockExtractTextFromPDF === 'function') {
+		return (window as any).__mockExtractTextFromPDF();
+	}
+
 	try {
 		const pdfjsLib = await import('pdfjs-dist');
 		
