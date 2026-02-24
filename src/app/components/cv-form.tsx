@@ -2,9 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import * as pdfjsLib from 'pdfjs-dist';
-import type { TextItem, TextMarkedContent } from 'pdfjs-dist/types/src/display/api';
-import { processPDFText } from '../utils/text-cleaning';
 import { 
 	processPDFFile as processPDFFileUtil,
 	handleFileUpload as handleFileUploadUtil,
@@ -14,16 +11,6 @@ import {
 } from '../utils/file-handling';
 import { extractTextFromPDF as extractTextFromPDFUtil } from '../utils/pdf-processing';
 import { getLoadingPhrase, createLoadingAnimation } from '../utils/loading';
-
-// Set up PDF.js worker for client-side with fallback
-if (typeof window !== 'undefined') {
-	try {
-		pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-	} catch (error) {
-		console.warn('Failed to load PDF.js worker from CDN, using local fallback');
-		pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.mjs';
-	}
-}
 
 interface CVFormProps {
 	onOptimize: (pdfFile: File, jobOffer: string, originalText: string) => Promise<void>;
