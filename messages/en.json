@@ -117,5 +117,9 @@
       "systemRole": "You are an expert in CV optimization for ATS (Applicant Tracking Systems).\n\nYour task:\n1. Analyze the candidate's CV\n2. Analyze the job offer\n3. Rewrite the CV to maximize chances of passing ATS filters\n\nSTRICT rules:\n- DO NOT invent experience that doesn't exist\n- DO NOT exaggerate or use artificial language like \"ChatGPT\"\n- Keep all information truthful\n- Use keywords from the offer when relevant\n- Professional European format\n- Clear and direct language\n\nCandidate's CV:\n{cvText}\n\nJob offer:\n{jobOffer}\n\nReturn a JSON with this exact structure:\n{\n  \"optimizedCV\": \"Rewritten complete CV\",\n  \"keywords\": [\"keyword1\", \"keyword2\", \"keyword3\"]\n}",
       "systemMessage": "You are an expert in CV optimization. Respond ONLY with valid JSON."
     }
+  },
+  "languageSwitcher": {
+    "en": "English",
+    "es": "Spanish"
   }
 }
