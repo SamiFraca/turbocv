@@ -13,6 +13,9 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testEnvironment: 'jest-environment-jsdom',
+  transformIgnorePatterns: [
+    'node_modules/(?!(next-intl)/)',
+  ],
   testPathIgnorePatterns: [
     '<rootDir>/tests/',
     '<rootDir>/e2e/',
@@ -34,7 +37,6 @@ const customJestConfig = {
     '!src/app/lib/pdf-render.ts',
     '!src/app/lib/pdf.ts',
     '!src/app/components/sections/**/*',
-    '!src/i18n/**/*',
     '!src/app/utils/**/*',
     '!src/app/components/cv-form.tsx',
     '!src/proxy.ts',
