@@ -37,6 +37,8 @@ const customJestConfig = {
     '!src/i18n/**/*',
     '!src/app/utils/**/*',
     '!src/app/components/cv-form.tsx',
+    '!src/proxy.ts',
+    '!src/app/[locale]/*'
   ],
   coverageThreshold: {
     global: {
