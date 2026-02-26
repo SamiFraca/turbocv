@@ -1,79 +1,79 @@
 # TurboCV
 
-**Ajusta tu CV a cada oferta en 60 segundos**
+**Tailor your CV to each job offer in 60 seconds**
 
-Herramienta de optimización de currículums diseñada para pasar filtros ATS (Applicant Tracking Systems).
+Resume optimization tool designed to pass ATS (Applicant Tracking Systems) filters.
 
-## 🚀 Características
+## 🚀 Features
 
-- ✅ Optimización de CV con IA
-- 🎯 Diseñado para pasar filtros ATS
-- ⚡ Resultados en menos de 60 segundos
-- 📄 Exportación a PDF
-- 💳 Pago único por uso (8.99 €)
+- ✅ AI-powered CV optimization
+- 🎯 Designed to pass ATS filters
+- ⚡ Results in under 60 seconds
+- 📄 PDF export
+- 💳 Pay-per-use (€8.99)
 
-## 🛠️ Stack Técnico
+## 🛠️ Tech Stack
 
 - **Frontend**: Next.js 16 + React 19
 - **Styling**: Tailwind CSS 4
-- **Pagos**: Stripe
-- **IA**: OpenAI GPT-4
+- **Payments**: Stripe
+- **AI**: OpenAI GPT-4
 - **PDF**: jsPDF
 - **Linting**: Biome
 
-## 📦 Instalación
+## 📦 Installation
 
 ```bash
-# Instalar dependencias
+# Install dependencies
 pnpm install
 
-# Copiar variables de entorno
+# Copy environment variables
 cp .env.local.example .env.local
 
-# Configurar las siguientes variables en .env.local:
+# Configure the following variables in .env.local:
 # - OPENAI_API_KEY
 # - STRIPE_SECRET_KEY
 # - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ```
 
-## 🔧 Desarrollo
+## 🔧 Development
 
 ```bash
-# Ejecutar servidor de desarrollo
+# Run development server
 pnpm dev
 
-# Verificar código
+# Check code
 pnpm check
 
-# Formatear código
+# Format code
 pnpm format
 
-# Build para producción
+# Production build
 pnpm build
 ```
 
 ## 🌐 Deploy
 
-El proyecto está optimizado para desplegar en Vercel:
+The project is optimized for deployment on Vercel:
 
 ```bash
 vercel
 ```
 
-## 📝 Configuración de Stripe
+## 📝 Stripe Configuration
 
-1. Crear cuenta en [Stripe](https://stripe.com)
-2. Obtener las claves API (test o producción)
-3. Configurar webhook para eventos de pago (opcional)
+1. Create account on [Stripe](https://stripe.com)
+2. Get API keys (test or production)
+3. Configure webhook for payment events (optional)
 
-## 🔑 Variables de Entorno
+## 🔑 Environment Variables
 
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `OPENAI_API_KEY` | API key de OpenAI |
-| `STRIPE_SECRET_KEY` | Secret key de Stripe |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Publishable key de Stripe |
+| `OPENAI_API_KEY` | OpenAI API key |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
 
-## 📄 Licencia
+## 📄 License
 
 MIT
